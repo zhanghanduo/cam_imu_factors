@@ -8,8 +8,11 @@
 \setlength{\topmargin}{-2cm}  % top margin to retain centering
 \setlength{\headsep}{1.6cm}
 
-%---------------------- These packages below add functionality to your version of LaTeX --------------
-%---------------------- You might not use all of them --------------------------------------
+%---------------------- These packages below add functionality to your version
+%of LaTeX -------------- ---------------------- You might not use all of them
+%--------------------------------------
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
 \usepackage{amssymb}
 \usepackage{latexsym}
 \usepackage{amsthm}
@@ -30,30 +33,34 @@
 \usepackage[algo2e]{algorithm2e}
 \usepackage{appendix}
 \usepackage{bm}
-\usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}
 \usepackage{lmodern} % load a font with all the characters
-%------------------------- Customized Header --------------------------------------------------------
+\usepackage[square, numbers, comma, sort&compress]{natbib}
+%------------------------- Customized Header
+%--------------------------------------------------------
 \fancyhead{}
 \fancyfoot{}			
 \lhead{Stereo Camera + IMU/INS + GPS}
 \rhead{Page \thepage\ of \pageref{LastPage}}
 
-%---------- the symbols below will give you the blackboard bold of R, T, etc. ----------
-\DeclareSymbolFont{AMSb}{U}{msb}{m}{n}  
-\DeclareMathSymbol{\Sph}{\mathbin}{AMSb}{"53} \DeclareMathSymbol{\R}{\mathbin}{AMSb}{"52}
-\DeclareMathSymbol{\T}{\mathbin}{AMSb}{"54} \DeclareMathSymbol{\Z}{\mathbin}{AMSb}{"5A}
+%---------- the symbols below will give you the blackboard bold of R, T, etc.
+%----------
+\DeclareSymbolFont{AMSb}{U}{msb}{m}{n}
+\DeclareMathSymbol{\Sph}{\mathbin}{AMSb}{"53}
+\DeclareMathSymbol{\R}{\mathbin}{AMSb}{"52}
+\DeclareMathSymbol{\T}{\mathbin}{AMSb}{"54}
+\DeclareMathSymbol{\Z}{\mathbin}{AMSb}{"5A}
 \DeclareMathSymbol{\K}{\mathbin}{AMSb}{"4B}
 
-%------------------------- Theorem and Proof Environments -------------------------------------------------
+%------------------------- Theorem and Proof Environments
+%-------------------------------------------------
 
 % This section defines all the environments you might use.  Just type
 % \begin{theorem, or corollary, or whatever}, then the optional name of the
 % theorem inside {} (or empty {} if no name), then body of the theorem,
 % corollary, whatever, also inside {} then \end{theorem, corollary, whatever}
 %
-% Notice when I use them in the paper, I put an optional "argument" to the function
-% and this gives a name to the theorem
+% Notice when I use them in the paper, I put an optional "argument" to the
+% function and this gives a name to the theorem
 
 \newenvironment{theorem}[1]{\vspace{.9cm}\noindent    {\bf Theorem {#1}}}{\vspace{.1cm}}
 \newenvironment{lemma}[1]{\vspace{.9cm}\noindent    {\bf Lemma {#1}}}{\vspace{.1cm}}
@@ -62,11 +69,9 @@
 \def\qed{\hfill $\Box$}
 \renewenvironment{proof}{\vspace{.5cm}   \noindent{\bf Proof: }}{\qed \vspace{1cm}}
  
-%\theoremstyle{definition}
-%\newtheorem{notation}[theorem]{Notation}
+%\theoremstyle{definition} \newtheorem{notation}[theorem]{Notation}
 %\newtheorem{properties}[theorem]{Properties}
-%\newtheorem{remark}[theorem]{Remark}
-%\newtheorem{example}[theorem]{Example}
+%\newtheorem{remark}[theorem]{Remark} \newtheorem{example}[theorem]{Example}
 %\newtheorem{claim}[theorem]{Claim}
 %\newtheorem{observation}[theorem]{Observation}
 %\newtheorem{definition}[theorem]{Definition}
@@ -79,10 +84,8 @@
 \newenvironment{case}[1]{\stepcounter{case} \addvspace{.5\baselineskip} \noindent\textbf{Case \thecase}. \textit{#1}}{\hfill\fbox{Case \thecase}}
 
 %\newtheorem{case}{Case}
-\newtheorem{subcase}{Case}[case]
-\newtheorem{sub2case}{Case}[subcase]
-%\newtheorem{sub3case}{Case}[sub2case]
-%\newtheorem{sub4case}{Case}[sub3case]
+\newtheorem{subcase}{Case}[case] \newtheorem{sub2case}{Case}[subcase]
+%\newtheorem{sub3case}{Case}[sub2case] \newtheorem{sub4case}{Case}[sub3case]
 
 
 %Picture inclusion
@@ -111,7 +114,13 @@
 \maketitle
 
 \begin{abstract}
-This document is a report on Visual Inertial SLAM using an efficient method of IMU pre-integration. The pre-integration method combines high frequency IMU data as a single observation before fusion with camera images, resulting in a much reduced state and observation graph structure. An accurate map and robot path is hence obtainable in real-time. We present the pre-integration theory, including formulation of motion state, observation, uncertainty, observation model and the Jacobians.
+This document is a report on Visual Inertial SLAM using an efficient method of
+IMU pre-integration. The pre-integration method combines high frequency IMU data
+as a single observation before fusion with camera images, resulting in a much
+reduced state and observation graph structure. An accurate map and robot path is
+hence obtainable in real-time. We present the pre-integration theory, including
+formulation of motion state, observation, uncertainty, observation model and the
+Jacobians.
 \end{abstract}
 
 \newpage
@@ -123,7 +132,9 @@ This document is a report on Visual Inertial SLAM using an efficient method of I
 \section{Introduction}
 
 \vspace{1cm}
-In this work, we firstly introduce a perception system with a set of stereo camera with IMU. The integration with INS and GPS will be introduced in the next sections because their formulation is much simpler than that with IMU.
+In this work, we firstly introduce a perception system with a set of stereo
+camera with IMU. The integration with INS and GPS will be introduced in the next
+sections because their formulation is much simpler than that with IMU.
 \begin{figure}[ht]
 	\includegraphics[height=5cm]{figures/VIN_block-diagram.png}
 	\caption{Visual Inertial System}
@@ -131,40 +142,86 @@ In this work, we firstly introduce a perception system with a set of stereo came
 \end{figure}
 
 \paragraph{States}
-The state vector to be estimated contains the 3-D body position $\bm{p}^{\mathrm{w}}$, velocity $\bm{v}^{\mathrm{w}}$ an`d rotations in form of %quaternion $\bm{q}^{\mathrm{w}}$ (converted from 
-raw Euler angles $\bm{A}^{\mathrm{w}}=[\alpha,\beta,\gamma]$; as well as the M feature locations ($\bm{f}_i^{\mathrm{w}}$) representing visual landmarks where i = 1,...N. 
+The state vector to be estimated contains the 3-D body position
+$\bm{p}^{\mathrm{w}}$, velocity $\bm{v}^{\mathrm{w}}$ and rotations in form of
+quaternion $\bm{q}^{\mathrm{w}}$ (converted from raw Euler angles
+$\bm{A}^{\mathrm{w}}=[\alpha,\beta,\gamma]$); as well as the M feature locations
+($\bm{f}_i^{\mathrm{w}}$) representing visual landmarks where i = 1,...N. 
 
-\paragraph{Sensor data and bias}
-The IMU readings include 3-D linear acceleration $\bm{f}^{\mathrm{b}}$ and angular rate $\bm{\omega}^{\mathrm{b}}$, both given in body frame and come with non-zero bias : $\bm{b}_f$ and $\bm{b}_\omega$. \newline
-Further, due to its design principal, the IMU can only measure acceleration with the gravity taken out, therefore the true vehicle's acceleration in the world frame should be \\
-$\bm{f}^{\mathrm{w}} = R_b^{\mathrm{w}}( \bm{f}^{\mathrm{b}}-\bm{b}_f ) + \bm{g}^{\mathrm{w}}$ \\
-Superscript refers to the reference frame and here $\{\cdot\}^{\mathrm{w}}$ is the world (reference) frame.
-$R_b^{\mathrm{w}}$ and $\Omega_b^{\mathrm{w}}$ are the rotation and angular rate matrices from body frame to world frame, respectively.
+\paragraph{IMU measurement model}
+% The IMU readings include 3-D linear acceleration $\bm{f}^{\mathrm{b}}$ and
+% angular rate $\bm{\omega}^{\mathrm{b}}$, both given in body frame and come
+% with non-zero bias : $\bm{b}_f$ and $\bm{b}_\omega$. \newline Further, due to
+% its design principal, the IMU can only measure acceleration with the gravity
+% taken out, therefore the true vehicle's acceleration in the world frame should
+% be \\
+% $\bm{f}^{\mathrm{w}} = R_b^{\mathrm{w}}( \bm{f}^{\mathrm{b}}-\bm{b}_f ) +
+% \bm{g}^{\mathrm{w}}$ \\
+For the notation of coordinate transformation and vectors, superscript refers to
+the reference frame and here $\{\cdot\}^{\mathrm{w}}$ is the
+reference(\textbf{world}) frame. $R_b^{\mathrm{w}}$ and $\Omega_b^{\mathrm{w}}$
+are the rotation and angular rate matrices from body frame to world frame,
+respectively.
 
+
+\begin{equation}
+	\left\{
+	\begin{aligned}
+	&\hat{\bm{a}}^b=\bm{a}^b+\bm{b}_a+\bm{R}_w^b\bm{g}^w+\bm{n}_a\\
+	&\hat{\bm{\omega}}^b=\bm{\omega}^b+\bm{b}_\omega+\bm{n}_\omega
+	\end{aligned}
+	\right.
+	\label{eq.measurement_model}
+\end{equation}
+where $\hat{\bm{a}}^b$ and $\hat{\bm{\omega}}^b$ represent the measured
+acceleration and angular velocity information of IMU; $\bm{a}^b$ and
+$\bm{\omega}^b$ represent true acceleration and angular velocity of the body
+itself; $\bm{b}_a$ and $\bm{b}_\omega$ represent the bias of the accelerator and
+gyroscope, modeled as the random walk process:
+\begin{equation}
+\centering
+	\left\{
+	\begin{aligned}
+	&\bm{n}_{\bm{b}_a}\sim\mathcal{N}\left(\bm{0},\bm{\sigma}_{b_a}^2\right),\bm{n}_{\bm{b}_\omega}\sim\mathcal{N}\left(\bm{0},\bm{\sigma}_{b_\omega}^2\right)\\
+	&\dot{\bm{b}_a}=\bm{n}_{\bm{b}_a},dot{\bm{b}_\omega}=\bm{n}_{\bm{b}_\omega}
+	\end{aligned}
+	\right.
+	\label{eq.error_model}
+\end{equation}
+where $\bm{R}_w^b$ is the coordinate rotation matrix from world coordinate to
+ego-body coordinate; $\bm{g}^w$ is the gravity acceleration vector under world
+coordinate; $\bm{n}_a\sim\mathcal{N}\left(\bm{0},\bm{\sigma}_a^2\right)$ and
+$\bm{n}_\omega\sim\left(\bm{0},\bm{\sigma}_\omega^2\right)$ are the Gaussian
+white noise of the IMU sensor.
+	
 
 \paragraph{Naive visual inertial model}
 
 The motion model based on IMU reading can be stated as
 \begin{align}
 \begin{split}
-	\triangle t & =  t_{t+1} - t_t \\
-	\bm{f}_t^{\mathrm{n}} & = R_{bt}^{\mathrm{n}}  (\bm{f}_t^{\mathrm{b}} - \bm{b}_f) \\
-	\bm{v}_{t+1} & = \bm{v}_{t} + \bm{f}_t^{\mathrm{n}} \triangle t + \bm{g}^{\mathrm{n}} \triangle t \\
-	\bm{p}_{t+1} & = \bm{p}_{t} + \bm{v}_t \triangle t \\
-	\bm{A}_{t+1} & = \bm{A}_t + \Omega_{bt}^{\mathrm{n}}  (\bm{\omega}_t^{\mathrm{b}} - \bm{b}_\omega) \triangle t
+	\textrm{time difference:}  \qquad \triangle t & =  t_{t+1} - t_t \\
+	\textrm{acceleration:} 	   \qquad \bm{a}_t^{\mathrm{w}} & = R_{bt}^{\mathrm{w}}  (\bm{a}_t^{\mathrm{b}} - \bm{b}_a) \\
+	\textrm{velocity:}         \qquad \quad \bm{v}_{t+1} & = \bm{v}_{t} + \bm{a}_t^{\mathrm{w}} \triangle t + \bm{g}^{\mathrm{w}} \triangle t \\
+	\textrm{position:}         \qquad \quad \bm{p}_{t+1} & = \bm{p}_{t} + \bm{v}_t \triangle t + \bm{a}_t^{\mathrm{w}} \triangle t^2\\
+	\textrm{rotation:}         \qquad \quad \bm{q}_{t+1} & = \bm{q}_t \otimes  \Omega_{bt}^{\mathrm{w}}  (\hat{\bm{\omega}}^b_t - \bm{b}_\omega) \triangle t
 \end{split}
+\label{eq.motion_model}
 \end{align}
 
 \section{The original VI problem}
-For a system composed of an IMU and stereo camera navigating with $N$ camera poses, $K$ IMU samples per image and $M$ features, the naive VI problem includes robot poses at all IMU sample times.
+For a system composed of an IMU and stereo camera navigating with $N$ camera
+poses, $K$ IMU samples per image and $M$ features, the naive VI problem includes
+robot poses at all IMU sample times.
 
 \paragraph{State Vector}
 the state vector $\textbf{X}$ is defined as:
 \begin{align*}
-\textbf{x} = &(\overbrace{\textbf{A}_{10}, \textbf{p}_{10}, \textbf{A}_{20}, \textbf{p}_{20},... ,\textbf{p}_{K-1,0}, \textbf{p}_{K-1,0},\textbf{A}_{0,1}, \textbf{p}_{0,1},...,\textbf{A}_{K-1,1}, \textbf{p}_{K-1,1},... \textbf{A}_{K-1,N-1}, \textbf{p}_{K-1,N-1},\textbf{A}_{0N}, \textbf{p}_{0N}}^{K \times (N - 1) \ {\mathrm{ poses}}},\\
+\textbf{x} = &(\overbrace{\textbf{q}_{10}, \textbf{p}_{10}, \textbf{q}_{20}, \textbf{p}_{20},... ,\textbf{p}_{K-1,0}, \textbf{p}_{K-1,0},\textbf{q}_{0,1}, \textbf{p}_{0,1},...,\textbf{q}_{K-1,1}, \textbf{p}_{K-1,1},... \textbf{q}_{K-1,N-1}, \textbf{p}_{K-1,N-1},\textbf{q}_{0N}, \textbf{p}_{0N}}^{K \times (N - 1) \ {\mathrm{ poses}}},\\
 	 &\overbrace{\textbf{F}_{1},\textbf{F}_{2}, ..., \textbf{F}_{M}}^{M \ {\mathrm{ features}}},\\
 	 &\overbrace{\textbf{v}_{00},\textbf{v}_{10} ...,\textbf{v}_{K-1,0}, ...,\textbf{v}_{0,N-1},...,\textbf{v}_{K-1,N-1}, \textbf{v}_{0N}}^{(K \times (N-1)+1)  \ {\mathrm{ velocities}}},\\
-	 &\textbf{g}^{\mathrm{n}}, \textbf{A}_{u2c}, \textbf{T}_{u2c}, \textbf{b}_f, \textbf{b}_w )' 
+	 &\textbf{g}^{\mathrm{n}}, \textbf{A}_{u2c}, \textbf{T}_{u2c}, \textbf{b}_f, \textbf{b}_w )^{\mathrm{T}} 
+	 \label{eq.state_vector}
 \end{align*}
 
 \paragraph{Observation Vector}
@@ -175,302 +232,129 @@ The Observation vector $\textbf{Z}$ is defined as:
 \textbf{z}_{raw} &= (\textbf{z}_{camera}, \textbf{z}_{IMUraw}, \textbf{z}_{Tv})' \nonumber \\
 =& (\overbrace{\textbf{uv}_{11}, \textbf{uv}_{21}, ... , \textbf{uv}_{M1}, ..., \textbf{uv}_{1N}, \textbf{uv}_{2N}, ... , \textbf{uv}_{MN}}^{M \times N \ {\mathrm{pixels}}}, \nonumber \\ 
 & \overbrace{\omega\textbf{f}_{01}, \omega\textbf{f}_{11}, ... , \omega\textbf{f}_{(K-1)1}, ..., \omega\textbf{f}_{0(N-1)}, \omega\textbf{f}_{1(N-1)}, ... , \omega\textbf{f}_{(K-1)(N-1)}}^{K \times (N-1) \ {\mathrm{IMU \ readings}}}, \\
-& \overbrace{\textbf{0}, \textbf{0}, ... , \textbf{0}}^{K \times (N-1)  \ {\mathrm{ zero \ contraints}}})' 
+& \overbrace{\textbf{0}, \textbf{0}, ... , \textbf{0}}^{K \times (N-1)  \ {\mathrm{ zero \ contraints}}})^{\mathrm{T}}
 \end{split}
+% \label{eq.observation_vector}
 \end{align*}
 
-See Appendix \ref{apn:naiveVin} for details on Naive VI motion model and optimization details.
-Clearly, such a large state space quickly becomes difficult to manage in practice. Further, each step of re-linearization, the integration from acceleration to velocity then to position has to be recomputed.
+% See Appendix \ref{apn:naiveVin} for details on Naive VI motion model and
+% optimization details. 
+Clearly, such a large state space quickly becomes difficult to manage in
+practice. Further, each step of re-linearization, the integration from
+acceleration to velocity then to position has to be recomputed, which brings
+lots of additional time.
 
 \section{The Preintegration algorithm}
 
 \begin{figure}[!h]
 	\begin{center}\begin{tabular}{cc}
-			\includegraphics[height=3.3cm]{figures/IMU-sample_Image-frames_3D_illustration.png}&
-			\includegraphics[height=3.3cm]{figures/Preintegrated-IMU_image_3D_illustration.png}\\
-			(a) & (b) \\
-		\end{tabular}\end{center}
-		\caption{\emph{a}) Samples: Camera+IMU \emph{b}) Inertial-delta: preintegrated information \cite{Manifold2015}} 
-		\label{fig:VIN sensor information}
-	\end{figure} 
-Todd Lupton first proposed the Preintegration method in 2012 \cite{Lupton2012}: integrate a large number of high rate IMU observations into a single observation, making it faster and easier to deal with in a SLAM filter. IMU data is integrated in a body fixed frame that moves with the vehicle, transformation to reference frame only happens at the end of integration, hence the algorithm is referred to as \textbf{Pre-Integration}.
+		\includegraphics[height=3.3cm]{figures/IMU-sample_Image-frames_3D_illustration.png}&
+		\includegraphics[height=3.3cm]{figures/Preintegrated-IMU_image_3D_illustration.png}\\
+		(a) & (b) \\
+	\end{tabular}\end{center}
+	\caption{(a) Camera+IMU (b) Inertial-delta: preintegrated information \cite{Manifold2015}} 
+	\label{fig:VIN sensor information}
+\end{figure} 
 
-The reference frame in Preintegration VI system is defined as the body frame at initial robot pose, instead of the traditional globally referenced frame.
+Todd Lupton first proposed the Preintegration method in 2012 \cite{Lupton2012}:
+integrate a large number of high rate IMU observations into a single
+observation, making it faster and easier to deal with in a SLAM filter. IMU data
+is integrated in a body fixed frame that moves with the vehicle, transformation
+to reference frame only happens at the end of integration, hence the algorithm
+is referred to as \textbf{Pre-Integration}.
 
-%With a stereo camera, Todd Lupton also provided a way to recover the absolute global frame after 3 images of observation. However this is not possible with monocular camera setup.
+The reference frame in Preintegration visual inertial system is defined as the
+body frame at initial robot pose, instead of the traditional globally referenced
+frame, preventing the need to reintegrate the state dynamics at each
+optimization step.
 
-\paragraph{Inertial Delta observation} The integrated term, including position, velocity and attitude is referred to as inertial delta observation $\triangle \bm{I}$.
-
-\paragraph{Motion from Inertial Delta}
-Relationship between robot motion state to inertial delta is shown in Equations (\ref{eq:Idt2X_orig_1} - \ref{eq:Idt2X_orig_3})
-
-\begin{align}
-\bm{p}^{\mathrm{w}}_{t2} = & \bm{p}^{\mathrm{w}}_{t1} + (t2 - t1) \bm{v}^{\mathrm{w}}_{t1} + 
-\frac{1}{2} (t2 - t1 )^2 \bm{g}^{\mathrm{w}} + R^{\mathrm{w}}_{bt1} \triangle {\bm{p}^{t1}_{t2}}^+ 
-\label{eq:Idt2X_orig_1}\\
-\bm{v}^{\mathrm{w}}_{t2} = & \bm{v}^{\mathrm{w}}_{t1} + (t2 - t1 ) \bm{g}^{\mathrm{w}} + R^{\mathrm{w}}_{bt1} \triangle \bm{v}^{t1}_{t2} 
-\label{eq:Idt2X_orig_2}\\
-\bm{A}^{\mathrm{w}}_{t2} = & Euler( R^{\mathrm{w}}_{bt1} \triangle R^{\mathrm{bt1}}_{bt2} )
-\label{eq:Idt2X_orig_3}
-\end{align}
-
-\begin{algorithm}
-	\caption{The Pre-integration Method Based on Inertial Raw Data}
-	\label{algm:preint}		
-	\begin{algorithmic}
-	\STATE Inertial-delta observation $ \triangle \bm{\mathrm{I}} = \begin{bmatrix} \triangle \textbf{p}_{t}^+ \\ \triangle \textbf{v}_{t} \\ \triangle \textbf{A} _{t} \end{bmatrix}$, initially set to $\begin{bmatrix} 0 \\ 0 \\ 0 \end{bmatrix}$
-		\FOR{$t_1 < t < t_2$}
-		\STATE $\triangle t =  t_{t+1} - t_t$ 
-		\STATE $\textbf{f}_t^{\mathrm{bt1}} = R_{\mathrm{bt}}^{\mathrm{bt1}} (\textbf{f}_t^{\mathrm{b}} - \textbf{b}_f)$ 
-		\STATE $\triangle \textbf{v}_{t+1} = \triangle \textbf{v}_{t} + \textbf{f}_t^{\mathrm{bt1}} \triangle t$ 
-		\STATE $\triangle \textbf{p}_{t+1}^+ = \triangle \textbf{p}_{t}^+ + \triangle \textbf{v}_t \triangle t$ 
-		\STATE $\triangle \textbf{A} _{t+1} = \triangle \textbf{A} _{t} + E_{\mathrm{bt}}^{\mathrm{bt1}} (\omega _t^{\mathrm{b}} - \textbf{b}_\omega) \triangle t$ 
-		\ENDFOR
-	\end{algorithmic}
-\end{algorithm}
-
+%With a stereo camera, Todd Lupton also provided a way to recover the absolute
+%global frame after 3 images of observation. However this is not possible with
+%monocular camera setup.
 \subsection{Formulation of Preintegration}
-\paragraph{State Vector} $\textbf{X}_{prn}$ is defined as:
-$$\textbf{X}_{prn} = (\overbrace{\textbf{A}^u_2, \textbf{p}^u_{2}, ... , \textbf{A}^u_{N}, \textbf{p}^u_{N}}^{N - 1 \ {\mathrm{ poses}}}, \overbrace{\textbf{F}_{1}, ..., \textbf{F}_{M}}^{M  \ {\mathrm{features}}}, \overbrace{\textbf{v}_1, ..., \textbf{v}_{N}}^{N \ {\mathrm{velocities}}},  \textbf{g}^{\mathrm{n}}, \textbf{A}_{u2c}, \textbf{T}_{u2c}, \textbf{b}_f, \textbf{b}_w)' $$
-where
-$\textbf{A}^u_i = (\alpha^u_i, \beta^u_i, \gamma^u_i)$,
-$\textbf{p}^u_i = (x^u_i, y^u_i, z^u_i) $,
-$\textbf{F}_{i} = (x_{i}, y_{i}, z_{i}) $.
-\paragraph{Observation vector} becomes:
-
-$$\textbf{Z}_{prn} = (\overbrace{\textbf{uv}_{1}, ... , \textbf{uv}_{N}, ..., \textbf{uv}_{1N}, ... , \textbf{uv}_{MN}}^{M \times N  \ {\mathrm{pixels}}}, \overbrace{\triangle \textbf{p}^+_2, \triangle  \textbf{v}_2, \triangle \textbf{A}_2, ..., \triangle  \textbf{p}^+_N, \triangle \textbf{v}_N, \triangle  \textbf{A}_N}^{N - 1 \ {\mathrm{inertialDeltas}}})' $$
-where $\textbf{uv}_{ij} = (u_{ij}, v_{ij})$ represents the image of the $i$th feature point  at the $j$th camera pose.
-
-
-\subsection{IMU bias}
-Algorithm \ref{algm:preint} gives the pre-integration process model, it is therefore possible to compute is uncertainty from that of IMU measurements. Also, the IMU readings contain non-zero biase terms, so do not reflect the true motion's angular rate and acceleration. We tackle this problem in two steps, we assume $\bm{b}$ is known in computing inertial delta $\triangle \bm{I}$; then correct for the error in the optimization stage.
-
-\subsubsection{Modified process model for Inertial-delta + Bias}
-To analyze the effect of the unknown bias term on Inertial Delta observation, we modified the process model in Algorithm \ref{algm:preint} to include evolution of Inertial Delta plus bias. The expanded Inertial delta observation is denoted $\triangle I^+$, the new model is illustrated in algorithm \ref{algm:preintBias}
-\begin{algorithm}
-	\caption{The Pre-integration Method Based on Inertial Raw Data}
-	\label{algm:preintBias}		
-	\begin{algorithmic}
-		\STATE Extended Inertial-delta observation $ \triangle \bm{\mathrm{I}}^+ = \begin{bmatrix} 
-		\triangle \textbf{p}_{t}^+ \\
-		\triangle \textbf{v}_{t} \\
-		\triangle \textbf{A} _{t} \\
-		\textbf{b}_f \\
-		\textbf{b}_{\omega}
-		\end{bmatrix}$, initially set to $\begin{bmatrix} 
-		0 \\ 
-		0 \\ 
-		0 \\
-		0 \\
-		0
-		\end{bmatrix}$
-		%\begin{flalign*}
-		%\STATE $\triangle \textbf{p}^+_t = 0$, $\triangle \textbf{v}_t = 0$, $\triangle \textbf{A}_t = 0$ 
-		%\end{flalign*}
-		\FOR{ $t_1 < t < t_2$ }
-			\STATE $\triangle t =  t_{t+1} - t_t$ 
-			\STATE $\textbf{f}_t^{\mathrm{bt1}} = R_{\mathrm{bt}}^{\mathrm{bt1}} (\textbf{f}_t^{\mathrm{b}} - \textbf{b}_f)$ 
-			\STATE $\triangle \textbf{v}_{t+1} = \triangle \textbf{v}_{t} + \textbf{f}_t^{\mathrm{bt1}} \triangle t$ 
-			\STATE $\triangle \textbf{p}_{t+1}^+ = \triangle \textbf{p}_{t}^+ + \triangle \textbf{v}_t \triangle t$ 
-			\STATE $\triangle \textbf{A} _{t+1} = \triangle \textbf{A} _{t} + E_{\mathrm{bt}}^{\mathrm{bt1}} (\omega _t^{\mathrm{b}} - \textbf{b}_\omega ) \triangle t$ 
-			\STATE $\textbf{b}_f = \textbf{b}_f$
-			\STATE $\textbf{b}_{\omega} = \textbf{b}_{\omega}$
-		\ENDFOR
-	\end{algorithmic}
-\end{algorithm}
-
-\subsection{Inertial delta $\Sigma$ and Bias Jacobian}
-In order to apply the SLAM optimization framework, we need to provide the inertial delta's uncertainty and variability due to bias (i.e. Jacobian due to biase). To achieve this, we interpret Algorithm \ref{algm:preintBias} as an EKF in its own. This EKF has a state vector defined as $\triangle \bm{I}^+_t$, it is recursively computed as a function of previous state vector $\triangle \bm{I}^+_{t-1}$ and IMU readings, summarized in equation below:
-\begin{equation}
-\triangle {\bm{I}}^+_t = \bm{f}( \bm{\triangle I^+_{t-1}}, \bm{f}^{\mathrm{b}}_{t}, \bm{\omega}^{\mathrm{b}}_{t})
-\end{equation}
-
-
-The integration process is recursive, therefore the inertial delta's uncertainty $\Sigma$ and Jacobian $J$ (now against both inertial delta and bias terms ) are computed recursively, starting with a zero uncertainty and an identity matrix in the beginning, as illustrated in Figure \ref{fig:preintBlock}
-
-\begin{figure}[h!]
-	\includegraphics[height=6cm]{figures/Pre-integration_block-flow.png}
-	\caption{Pre-Integration}
-	\label{fig:preintBlock}
-\end{figure}
-
-In each discrete summation step, state covariance $\Sigma_t$ is related to the uncertainty $\Sigma_t$ at time $t-1$ (Fig \ref{fig:preintUncertainty}) and current measurement noise by $F_t$ and $G_t$, where $F_t$ and $G_t$ are the Jacobians of the state transition function $\bm{f}()$ w.r.t the state vector $\triangle I^+$ and the noise input $\mathrm{\bm{\eta}_t}$ respectively.
-\begin{figure}[h!]
-	\includegraphics[height=7cm]{figures/Inertial-delta_covariance_evolution.png}
-	\caption{Evolution of uncertainty during Pre-Integration}
-	\label{fig:preintUncertainty}
-\end{figure}
-
-The modified process's Jacobian $J_{t}$ is a chain product of previous process's Jacobian $J_{t-1}$ and state transition Jacobian $F_{t-1}$. 
-\begin{equation}
-	\begin{split}
-J^{t2}_{t1} =&\frac {\partial \triangle I^+_{t2}}{\partial \triangle I^+_{t1}}\\
-= & \frac {\partial \triangle I^+_{t1+1}}{\partial \triangle I^+_{t1}} ... \frac {\partial \triangle I^+_{t2-1}}{\partial \triangle I^+_{t2-2}} . \frac {\partial \triangle I^+_{t2}}{\partial \triangle I^+_{t2-1}} \\
-\end{split}
-\end{equation}
-The final structure of Jacobian $J^{t2}_{t1}$ is shown in Equation \ref{eq:IJB}. As the initial vehicle states are set to zero at the beginning of each delta, only the last two columns of this matrix, relating to the bias terms, are important for the result but the whole matrix is required for the internal calculations. The last 2 columns of the matrix is the Jacobian's bias component, it reflects how the inertial delta $\triangle \bm{I}$ changes versus the biasing terms. This will be useful in the subsequent VIN optimization process. The complete covariance and Jacobian calculation algorithm are listed in algorithm \ref{algm:preint_cov}. \\
-
-
-\begin{algorithm}[h!]
-	\caption{The Covariance Matrix for the Pre-integration Method}
-	\label{algm:preint_cov}
-	\begin{algorithmic}%[8]
-		%\begin{flalign*}
-		\STATE $J_t = \textbf{I}_{15}$ 
-		\STATE ${\Sigma}_t = \textbf{I}_{15}$ 
-		\FOR{$t_1 < t < t_2$}
-		\STATE $\triangle t =  t_{t+1} - t_t$ 
-		\STATE $\alpha = \frac{d R^{\mathrm{bt1}}_{\mathrm{bt}} (\textbf{f}_t - \textbf{b}_f)}{d \textbf{A}_t}$
-		\STATE $\beta = \frac{d E^{\mathrm{bt1}}_{\mathrm{bt}} (\omega_t - \textbf{b}_\omega)}{d \textbf{A}_t}$
-		\STATE $F_t = \begin{bmatrix} \textbf{I}_3 & \textbf{I}_3 \triangle t & \textbf{0}_3 & \textbf{0}_3 & \textbf{0}_3 \\ 
-		\textbf{0}_3 & \textbf{I}_3  & \alpha \triangle t & -R^{\mathrm{bt1}}_{\mathrm{bt}} \triangle t & \textbf{0}_3 \\ 
-		\textbf{0}_3 & \textbf{0}_3 & \textbf{I}_3 + \beta \triangle t & \textbf{0}_3 & -E^{\mathrm{bt1}}_{\mathrm{bt}} \triangle t \\
-		\textbf{0}_3 & \textbf{0}_3 & \textbf{0}_3 & \textbf{I}_3 & \textbf{0}_3 \\
-		\textbf{0}_3 & \textbf{0}_3 & \textbf{0}_3 & \textbf{0}_3 & \textbf{I}_3
-		\end{bmatrix}$
-		\STATE $G_t = \begin{bmatrix} \textbf{0}_3 & \textbf{0}_3 \\ R^{\mathrm{bt1}}_{\mathrm{bt}} \triangle t & \textbf{0}_3 \\ \textbf{0}_3 & E^{\mathrm{bt1}}_{\mathrm{bt}} \triangle t \\ \textbf{0}_3 & \textbf{0}_3 \\ \textbf{0}_3 & \textbf{0}_3 \end{bmatrix}$
-		\STATE $J_{t+1} = F_{t} J_t$ 
-		\STATE ${\Sigma}_{t+1} = F_{t} {\Sigma}_t F'_{t} + G_t Q_t G'_t$ 
-		\ENDFOR
-		\STATE $J^{t2}_{t1} = J_{t}$
-		\STATE ${\Sigma}^{t2}_{t1} = {\Sigma}_{t}$
-	\end{algorithmic}
-\end{algorithm}
+For time consecutive frames $b_k$ and $b_{k+1}$, there exists several
+measurements in the time inverval $[t_k, t_{k+1}]$. Given the bias estimation,
+we integrate them in the \textbf{local frame} $b_K$ as:
 
 \begin{equation}
-J=\begin{bmatrix}
-\frac{\partial { \triangle \bm{p}^+_{t2}}}{\partial \bm{p}^{t1}_{t1}}		&	
-\frac{\partial { \triangle \bm{p}^+_{t2}}}{\partial \bm{v}^{t1}_{t1}}		& 
-\frac{\partial { \triangle \bm{p}^+_{t2}}}{\partial \bm{A}^{t1}_{t1}}		&
-\frac{\partial { \triangle \bm{p}^+_{t2}}}{\partial \bm{b}_{f}}		&
-\frac{\partial { \triangle \bm{p}^+_{t2}}}{\partial \bm{b}_{\omega}}		\\
-\bm{0}_3	&
-\frac{\partial { \triangle \bm{v}_{t2}}}{\partial \bm{v}^{t1}_{t1}}		& 
-\frac{\partial { \triangle \bm{v}_{t2}}}{\partial \bm{A}^{t1}_{t1}}		&
-\frac{\partial { \triangle \bm{v}_{t2}}}{\partial \bm{b}_{f}}		&
-\frac{\partial { \triangle \bm{v}_{t2}}}{\partial \bm{b}_{\omega}}		\\
-\bm{0}_3	&
-\bm{0}_3	&
-\frac{\partial { \triangle \bm{A}_{t2}}}{\partial \bm{A}^{t1}_{t1}}		&
-\bm{0}_3	&
-\frac{\partial { \triangle \bm{A}_{t2}}}{\partial \bm{b}_{\omega}}		\\
-\bm{0}_3	&
-\bm{0}_3	&
-\bm{0}_3	&
-\frac{\partial { \bm{b}^{obs}_{f}}}{\partial \bm{b}_{f}}		&
-\bm{0}_3	&		\\
-\bm{0}_3	&
-\bm{0}_3	&
-\bm{0}_3	&
-\bm{0}_3	&	
-\frac{\partial { \bm{b}^{obs}_{\omega}}}{\partial \bm{b}_{\omega}}		&
+\centering
+\left\{
+\begin{aligned}
+&\bm{p}_{b_{k+1}}^{b_k}=\iint_{t\in\left[t_k,t_{k+1}\right]}\bm{R}_{t}^{b_k}\left(\hat{\bm{a}}_{t}-\bm{b}_{a_t}\right)dt^2\\
+&\bm{v}_{b_{k+1}}^{b_k}=\int_{t\in\left[t_k,t_{k+1}\right]}\bm{R}_{t}^{b_k}\left(\hat{\bm{a}}_{t}-\bm{b}_{a_t}\right)dt \\
+&\bm{q}_{b_{k+1}}^{b_k}=\int_{t\in\left[t_k,t_{k+1}\right]}\frac{1}{2}\bm{\Omega}\left(\hat{\bm{\omega}}_t-\bm{b}_{\omega_t}\right)\bm{q}_t^{b_k}dt
+\end{aligned}
+\right.
+\label{eq.preintegration}
+\end{equation}
+where $\bm{p}$, $\bm{v}$ and $\bm{q}$ are respectively the
+incremental preintegration items for position, velocity and rotation (quaternion
+form). Here 
 
-\end{bmatrix}
-\label{eq:IJB}
+\begin{equation}
+\bm{\Omega}\left( \omega \right) = 
+\begin{bmatrix}
+	- \lfloor \omega \rfloor _ \times & \omega \\
+	- \omega ^{\mathrm{T}} & 0
+\end{bmatrix}, \lfloor \omega \rfloor _ \times = 
+\begin{bmatrix}
+	0 & - \omega_z & \omega_y \\
+	- \omega_z & 0 & - \omega_x \\
+	- \omega_y & \omega_x & 0
+\end{bmatrix}.
+\label{eq.rot_incremental}
 \end{equation}
 
-\subsection{Pre-Integration observation model}
-\subsubsection{Bias treatment}
-In previous section, the bias $\bm{b}$ is assumed to be known. We tackle this in two steps. We first assume $\bm{b}$ is known, referred to as $\bm{b}_0$. Now let the difference between true bias and observed bias be $\delta \bm{b} = \bm{b}^{est} - \bm{b}_0$, use first order expansion to get inertial delta's modified observation function.
-\begin{align}
-\triangle \bm{p}^+(\bm{b}^{0}) &=& \triangle \bm{p}^+(\bm{b}^{est})& &- & &\frac{\partial {\triangle \bm{p}^+(\bm{b}^{0})}}{\partial \bm{b}}  *&\delta \bm{b} 
-\label{eq:obsModel_bias_1}\\
-\triangle \bm{v}(\bm{b}^{0}) &=& \triangle \bm{v}(\bm{b}^{est})& &- & & \frac{\partial {\triangle \bm{v}(\bm{b}^{0})}}{\partial \bm{b}}*& \delta \bm{b} 
-\label{eq:obsModel_bias_2}\\
-\triangle \bm{A}(\bm{b}^{0}) &=& \triangle \bm{A}(\bm{b}^{est})& &- & &\frac{\partial {\triangle \bm{A}(\bm{b}^{0})}}{\partial \bm{b}}*& \delta \bm{b}
-\label{eq:obsModel_bias_3}\\
-\bm{b}^{0} &=& \bm{b}^{est}& &- & & \bm{\mathrm I}_3*&\delta \bm{b}
-\end{align}
-Note this $\delta \bm{b}$ is exactly the delta increment we want to compute in each Gauss Newton iteration. Therefore an analytic formula of inertial delta to Jacobian to bias is needed.\\ \\
-Now the expanded Pre-Integration observation model (from Eq \ref{eq:obsModel_bias_1} - \ref{eq:obsModel_bias_3})is:
-\begin{align}
-%
-% dp = Ru1 * (pu2-pu1-v1*dt-0.5*g*dt*dt)- ddpdbf*dbf - ddpdbw*dbw;
-\triangle \textbf{p}^+_i &= R_i (\textbf{p}_{i+1} - \textbf{p}_i - \textbf{v}_i \triangle t - \frac{1}{2} \textbf{g}^{\mathrm{n}} {(\triangle t)}^2) - \frac{\partial \triangle \textbf{p}^+_t}{\partial \textbf{b}_f} (\textbf{b}_f - \textbf{b}_{f0}) -  \frac{\partial \triangle \textbf{p}^+_t}{\partial \textbf{b}_\omega} (\textbf{b}_\omega - \textbf{b}_{\omega0})
-\label{eqn:preintObsModel_1} \\
-%
-\triangle  \textbf{v}_i &= R_i (\textbf{v}_{i+1} - \textbf{v}_i - \textbf{g} \triangle t) - \frac{\partial \triangle \textbf{v}_t}{\partial \textbf{b}_f} (\textbf{b}_f - \textbf{b}_{f0}) -  \frac{\partial \triangle \textbf{v}_t}{\partial \textbf{b}_\omega} (\textbf{b}_\omega - \textbf{b}_{\omega0})
-\label{eqn:preintObsModel_2} \\
-%
-% [a,b,g] = fnABG5R(Ru2*(Ru1)'); dphi = [a;b;g] - ddphidbw*dbw;
-\triangle \textbf{A}_i &= fn\_ABGFromR(R_{i+1}*R'_{i}) - \frac{\partial \triangle \textbf{A}_t}{\partial \textbf{b}_\omega} (\textbf{b}_\omega - \textbf{b}_{\omega0})
-\label{eqn:preintObsModel_3}
-\end{align}
-where $[\textbf{b}_{\omega0}, \textbf{b}_{f0}]'$ is aforementioned $\textbf{b}^{0}$, and $[\textbf{b}_\omega, \textbf{b}_f]'$  is aforementioned $\textbf{b}^{est}$. $i = 2,..., N$, $fn\_ABGFromR$ is a function that can obtain Euler angles from a corresponding rotation matrix, and $R_i, E_i$ correspond to the rotation matrix and rotation rate matrix for the IMU at the time step $i$. respectively.
+The details can be found in Appendix (TODO).
 
 
-The bias Jacobians, found in last 2 column blocks of equation \ref{eq:IJB} can be borrowed to substitute in the pre-integration observation model.
+\subsubsection{Bias Correctioin of Incremental preintegration}
 
-\subsubsection{Feature observation model}
-From feature to its observation by the camera, \cite{multipleViewGeometry} tell us the following relationship holds:
-\begin{align}
-\textbf{F}_{ij} &= (x_{ij}, y_{ij}, z_{ij}) = R_{cj} (\textbf{F}_{fi} - \textbf{p}_{c0j}) \label{formu:pij} \\
-u_{ij} &= f * x_{ij} / z_{ij} + cx_0 \label{formu:uij} \\
-v_{ij} &= f * y_{ij} / z_{ij} + cy_0 \label{formu:vij} \\
-d_{ij} &= z_{ij} \label{formu:dij}
-\end{align}
-where $f$ is the focal length of the camera, $(cx_0, cy_0)$ is the displacement of the origin of the camera.
+If the estimation of bias changes minorly, we adjust $\bm{p}_{b_{k+1}}^{b_k}$, $\bm{v}_{b_{k+1}}^{b_k}$, and $\bm{q}_{b_{k+1}}^{b_k}$ by their first-order approximations with respect to the bias as
 
-\subsubsection{Complete observation model}
-Putting all items together, $H(\textbf{x})$ can be written as:
-\begin{align} % R_{01} * ((\textbf{v}_{11} - \textbf{v}_{01}) / \triangle t - \textbf{g}) + \textbf{b}_f, E_i*(\textbf{A}_{0N} - \textbf{A}_{(K-1)(N-1)})/\triangle t + \textbf{b}_w, 
-H(\textbf{x}) &= (H_{camera}(\textbf{x}), H_{IMUint}(\textbf{x})) \nonumber \\
-=& (\overbrace{{u}_{11}, {v}_{11}, ... , {u}_{M1}, {v}_{M1}, ..., {u}_{1N}, {v}_{1N}, ... , {u}_{MN}, {v}_{MN}}^{M \times N \times 2}, \nonumber \nonumber \\ 
-& \overbrace{\triangle \textbf{p}^+_{2}, \triangle \textbf{v}_{2}, \triangle \textbf{A}_{2}, ... , \triangle \textbf{p}^+_{N}, \triangle \textbf{v}_{N}, \triangle \textbf{A}_{N}}^{(N-1) \times 9}) 
-%	=& (\overbrace{R_1 (\textbf{T}_{2} - \textbf{T}_1 - \textbf{v}_1 \triangle t - \frac{1}{2} \textbf{g} {(\triangle t)}^2) - \frac{\partial \triangle \textbf{p}^+_t}{\partial \textbf{b}_f} (\textbf{b}_f - \textbf{b}_{f0}) -  \frac{\partial \triangle \textbf{p}^+_t}{\partial \textbf{b}_\omega} (\textbf{b}_\omega - \textbf{b}_{\omega0}), R_1 (\textbf{v}_{2} - \textbf{v}_1 - \textbf{g} \triangle t) - \frac{\partial \triangle \textbf{v}_t}{\partial \textbf{b}_f} (\textbf{b}_f - \textbf{b}_{f0}) -  \frac{\partial \triangle \textbf{v}_t}{\partial \textbf{b}_\omega} (\textbf{b}_\omega - \textbf{b}_{\omega0}), fnABG5R(R_{2}*R'_{1}) - \frac{\partial \triangle \textbf{A}_t}{\partial \textbf{b}_\omega} (\textbf{b}_\omega - \textbf{b}_{\omega0}), ... }^{(N-1) \times 9})' \\
-\end{align}\\
-Details of Jacobian for H are given in appendix \ref{apn:preintVin}.
+\begin{equation}
+\left\{
+\begin{aligned}
+&\bm{p}_{b_{k+1}}^{b_k}\approx\hat{\bm{p}}_{b_{k+1}}^{b_k}+\bm{J}^{\bm{p}}_{\bm{b}_{ak}}\delta\bm{b}_a+\bm{J}^{\bm{p}}_{\bm{b}_\omega}\delta\bm{b}_{\omega_k} \\
+&\bm{v}_{b_{k+1}}^{b_k}\approx\hat{\bm{v}}_{b_{k+1}}^{b_k}+\bm{J}^{\bm{v}}_{\bm{b}_{ak}}\delta\bm{b}_a+\bm{J}^{\bm{v}}_{\bm{b}_\omega}\delta\bm{b}_{\omega_k} \\
+&\bm{q}_{b_{k+1}}^{b_k}\approx\hat{\bm{q}}_{b_{k+1}}^{b_k}\otimes 
+	\begin{bmatrix}
+		1 \\ \frac{1}{2}\bm{J}^{\bm{q}}_{\bm{b}_{\omega_k}}\delta\bm{b}_{\omega_k}
+	\end{bmatrix}.
+%\bm{J}^{\bm{q}}_{\bm{b}_{\omega_k}}\delta\bm{b}_{\omega_k}
+\end{aligned}
+\right.
+\label{eq.bias_correction}
+\end{equation}
 
-\section{Experimental results}
-\subsection{Comparison of Naive VIN vs Pre-Integration}
+Otherwise if the estimation of bias changes significantly, which far away from the linearization point, we have to do re-propagation under the new bias estimation. So we do not have to propagate IMU measurements repeatedly which save a lot of computational resources.
 
-\begin{figure}[ht!]
-	\includegraphics[height=10.3cm]{figures/SimuNpose_simData.jpg}
-	\caption{SimuNpose Naive vs Preintegration VIN}
-	\label{fig:simuNpose}
-\end{figure}
-
-A matlab routine $Main\_simuNpose.m$ was prepared to simulate VIN system and evaluate the performance of VIN with and without Pre-Integration.
-Table \ref{tab:table1} shows performance results of Naive VIN vs Pre-integration. The later is much more efficient.
-\begin{table}[h!]
-	\centering
-	\caption{Caption for the table.}
-	\begin{tabular}{cc|c|c}
-		Num image frames &  & Naive VIN & Pre-Integration\\
-		\hline
-		10 & Total time & 39.1 [sec] & 4.4 [sec]\\
-		{} & $\delta X$ & 4.2 & 15.7\\
-		\hline
-		20 & Total time & 145.1 [sec] & 9.1 [sec]\\
-		{} & $\delta X$ & 7.69 & 3.87\\
-		\hline
-		100 & Total time & NIL & 44.5 [sec]\\
-		{} & $\delta X$ & NIL & 12\\		
-	\end{tabular}
-	\label{tab:table1}
-\end{table}
+% \begin{algorithm}
+% 	\caption{The Pre-integration Method Based on Inertial Raw Data}
+% 	\label{algm:preint}		
+% 	\begin{algorithmic}
+% 	\STATE Inertial-delta observation $ \triangle \bm{\mathrm{I}} =
+% 		\begin{bmatrix} \triangle \textbf{p}_{t}^+ \\ \triangle \textbf{v}_{t}
+% 		\\ \triangle \textbf{A} _{t} \end{bmatrix}$, initially set to
+% 		$\begin{bmatrix} 0 \\ 0 \\ 0 \end{bmatrix}$ \FOR{$t_1 < t < t_2$} \STATE
+% 		$\triangle t =  t_{t+1} - t_t$ \STATE $\textbf{f}_t^{\mathrm{bt1}} =
+% 		R_{\mathrm{bt}}^{\mathrm{bt1}} (\textbf{f}_t^{\mathrm{b}} -
+% 		\textbf{b}_f)$ \STATE $\triangle \textbf{v}_{t+1} = \triangle
+% 		\textbf{v}_{t} + \textbf{f}_t^{\mathrm{bt1}} \triangle t$ \STATE
+% 		$\triangle \textbf{p}_{t+1}^+ = \triangle \textbf{p}_{t}^+ + \triangle
+% 		\textbf{v}_t \triangle t$ \STATE $\triangle \textbf{A} _{t+1} =
+% 		\triangle \textbf{A} _{t} + E_{\mathrm{bt}}^{\mathrm{bt1}} (\omega
+% 		_t^{\mathrm{b}} - \textbf{b}_\omega) \triangle t$ \ENDFOR
+% 	\end{algorithmic}
+% \end{algorithm}
 
 
-A simulation run of Pre-integration is shown in Figure \ref{fig:simuNpose}. 
 
 
-\subsection{Incremental initialization of states}
-Direct initialization may lead to errors for long tests. This is probably due to non-linearity in transforming from pre-integrated inertial back to global frame, see equation (\ref{eq:Idt2X_orig_1} - \ref{eq:Idt2X_orig_3}). The problem is solved by incremental introduction of new camera poses. Starting with limited number of frames, obtain optimized robot poses and features. Now introduce new observation, using previously obtained values as initial guess in new optimization, expand state vectors if necessary. Repeat process until all observations are covered. A matlab routine $Main\_inc.m$ was developed to simulate the process, see Fig \ref{fig:preint_init}.\emph{b} for illustration. Note: this is in effect similar to iSam2.
 
-	\begin{figure}[h!]
-		\begin{center}\begin{tabular}{cc}
-				\includegraphics[height=5cm]{figures/simuNpose_error.png} &
-				\includegraphics[height=5cm]{figures/Final_pose-feature_3D_GT-vs-SLAM.jpg}\\				
-			\end{tabular}\end{center}
-			\caption{\emph{a}) One off initialization , \emph{b}) Incremental initialization } 
-			\label{fig:preint_init}
-	\end{figure} 
 
-\subsection{Future improvements}
-\begin{itemize}
-	\item Change parameterization with Manifold \cite{Manifold2015}
-	\item Merge Parallax angles into feature representation \cite{ParallaxBA2015}
-\end{itemize}
+
+
 \newpage 
 %-----------------------------------------------------------------------------------------
 \begin{appendices}
@@ -507,13 +391,17 @@ Direct initialization may lead to errors for long tests. This is probably due to
 	\end{align*}
 	
 	\subsection{Camera frame to Global transform}	
-Using the IMU's coordinates at the 1st pose as the global reference frame, the relative position of these two sensors at that time can be related by $\textbf{A}_{u2c}$ and $\textbf{T}_{u2c}$, : 
-\begin{eqnarray*}   % do not need dollar signs because eqnarray puts you in math mode
-	\textbf{A}_{u2c} & = & (\alpha_{u2c}, \beta_{u2c}, \gamma_{u2c}), \\
+Using the IMU's coordinates at the 1st pose as the global reference frame, the
+relative position of these two sensors at that time can be related by
+$\textbf{A}_{u2c}$ and $\textbf{T}_{u2c}$, : 
+\begin{eqnarray*}   % do not need dollar signs because eqnarray puts you in math
+	mode \textbf{A}_{u2c} & = & (\alpha_{u2c}, \beta_{u2c}, \gamma_{u2c}), \\
 	\textbf{T}_{u2c} & = & (x_{u2c}, y_{u2c}, z_{u2c})
 \end{eqnarray*}
 
-And at the following poses, given IMU's states ($\textbf{R}^u_i$ and $\textbf{T}^u_i$), the camera's states ($\textbf{R}^c_i$ and $\textbf{T}^c_i$) can be obtained according to this formula:
+And at the following poses, given IMU's states ($\textbf{R}^u_i$ and
+$\textbf{T}^u_i$), the camera's states ($\textbf{R}^c_i$ and $\textbf{T}^c_i$)
+can be obtained according to this formula:
 
 \begin{align*}
 \textbf{R}^c_i &= \textbf{R}_{u2c} \textbf{R}^u_i \\
@@ -523,9 +411,11 @@ And at the following poses, given IMU's states ($\textbf{R}^u_i$ and $\textbf{T}
 \section{Preintegration VIN Jacobian}
 \label{apn:preintVin}
 \subsection{Jacobian of Inertial Delta to X}
-Based on the composition of $H(\textbf{x})$, the corresponding Jacobian matrix can be calculated. 
+Based on the composition of $H(\textbf{x})$, the corresponding Jacobian matrix
+can be calculated. 
 
-For camera observations of $(u_{ij}, v_{ij}, d_{ij})$ which represent the observation of the $i$th feature at the $j$th camera pose, 
+For camera observations of $(u_{ij}, v_{ij}, d_{ij})$ which represent the
+observation of the $i$th feature at the $j$th camera pose, 
 \begin{align}
 \frac{\partial u_{ij}}{\partial \textbf{F}_{ij}} &= [f/z_{ij}, 0, -fx_{ij}/z^2_{ij}] \\
 \frac{\partial v_{ij}}{\partial \textbf{F}_{ij}} &= [0, f/z_{ij}, -fy_{ij}/z^2_{ij}] \\
@@ -572,13 +462,14 @@ For $d\textbf{A}_{i}$,
 \frac{\partial \triangle \textbf{A}_{i}}{\partial \textbf{b}_\omega} &= - \frac{\partial \triangle \textbf{A}_t}{\partial \textbf{b}_\omega}
 \end{align}
 
-where $d\textbf{P}_{i} = (dx_{i}, dy_{i}, dz_{i}) $,
-$d\textbf{v}_{i} = (dvx_{i}, dvy_{i}, dvz_{i}) $, and
-$d\textbf{A}_{i} = (d\alpha_{i}, d\beta_{i}, d\gamma_{i}) $.
+where $d\textbf{P}_{i} = (dx_{i}, dy_{i}, dz_{i}) $, $d\textbf{v}_{i} =
+(dvx_{i}, dvy_{i}, dvz_{i}) $, and $d\textbf{A}_{i} = (d\alpha_{i}, d\beta_{i},
+d\gamma_{i}) $.
 
 \section{Naive VIN}
 \label{apn:naiveVin}
-The measurements model $H(\textbf{x})$ in Naive VIN can be broken into the following three parts:
+The measurements model $H(\textbf{x})$ in Naive VIN can be broken into the
+following three parts:
 
 \begin{align}
 %E_{ij} &= \begin{pmatrix} 1 & 0 & -sin(\beta) \\ 0 & cos(\alpha) & cos(\beta)sin(\alpha) \\ 0 & -sin(\alpha) & cos(\beta)cos(\alpha) \end{pmatrix} \\
@@ -587,7 +478,11 @@ The measurements model $H(\textbf{x})$ in Naive VIN can be broken into the follo
 \textbf{bZeros} &= \textbf{p}_{(i+1)j} - \textbf{p}_{ij} - \textbf{v}_{ij} \triangle t
 \end{align}
 
-where $i = 0,..., K-1$, and $R_{ij}, E_{ij} ( = \begin{pmatrix} 1 & 0 & -\sin(\beta_{ij}) \\ 0 & \cos(\alpha_{ij}) & \cos(\beta_{ij})\sin(\alpha_{ij}) \\ 0 & -\sin(\alpha_{ij}) & \cos(\beta_{ij})\cos(\alpha_{ij}) \end{pmatrix}) $ correspond to the rotation matrix and rotation rate matrix for the IMU at the time step $i$ since the $j$th key camera frame respectively.
+where $i = 0,..., K-1$, and $R_{ij}, E_{ij} ( = \begin{pmatrix} 1 & 0 &
+-\sin(\beta_{ij}) \\ 0 & \cos(\alpha_{ij}) & \cos(\beta_{ij})\sin(\alpha_{ij})
+\\ 0 & -\sin(\alpha_{ij}) & \cos(\beta_{ij})\cos(\alpha_{ij}) \end{pmatrix}) $
+correspond to the rotation matrix and rotation rate matrix for the IMU at the
+time step $i$ since the $j$th key camera frame respectively.
 
 Putting all items together, $H(\textbf{x})$ can be written as:
 
@@ -603,9 +498,11 @@ H(\textbf{x}) &= (H_{camera}(\textbf{x}), H_{IMUraw}(\textbf{x}), H_{Tv}(\textbf
 
 \subsection{Jacobian Matrix}
 
-Based on the composition of $H(\textbf{x})$, the corresponding Jacobian matrix can be calculated. 
+Based on the composition of $H(\textbf{x})$, the corresponding Jacobian matrix
+can be calculated. 
 
-For camera observations of $(u_{ij}, v_{ij}, d_{ij})$ which represent the observation of the $i$th feature at the $j$th camera pose, 
+For camera observations of $(u_{ij}, v_{ij}, d_{ij})$ which represent the
+observation of the $i$th feature at the $j$th camera pose, 
 \begin{align}
 % bZeros: \textbf{bZeros} &= \textbf{T}_{i+1} - \textbf{T}_{i} - \textbf{v}_{i} \triangle t 
 \frac{\partial u_{ij}}{\partial \textbf{F}_{ij}} &= [f/z_{ij}, 0, -fx_{ij}/z^2_{ij}] \\
@@ -674,9 +571,11 @@ For $\textbf{bZeros}_{ij}$,
 
 \lhead{\emph{PreIntegration}} % Change the page header to say "Bibliography"
 
-\bibliographystyle{unsrtnat} % Use the "unsrtnat" BibTeX style for formatting the Bibliography
+\bibliographystyle{apalike} % Use the "unsrtnat" BibTeX style for formatting the
+Bibliography
 
-\bibliography{vins} % The references (bibliography) information are stored in the file named "Bibliography.bib" Bibliography
+\bibliography{vins} % The references (bibliography) information are stored in
+the file named "Bibliography.bib" Bibliography
 
 \end{document}
 
