@@ -308,7 +308,7 @@ form). Here
 The details can be found in Appendix (TODO).
 
 
-\subsubsection{Bias Correctioin of Incremental preintegration}
+\subsection{Bias Correctioin of Incremental preintegration (Continuous Form)}
 
 If the estimation of bias changes minorly, we adjust $\bm{p}_{b_{k+1}}^{b_k}$, $\bm{v}_{b_{k+1}}^{b_k}$, and $\bm{q}_{b_{k+1}}^{b_k}$ by their first-order approximations with respect to the bias as
 
@@ -349,7 +349,25 @@ Otherwise if the estimation of bias changes significantly, which far away from t
 % \end{algorithm}
 
 
+\subsection{Bias Correctioin of Incremental preintegration (Continuous Form)}
 
+In the code, we actually use the discrete form of preintegration using mean value method to deploy the preintegration, 
+which corresponds to "IntegrationBase" in the code.
+
+\begin{equation}
+	\left\{
+	\begin{aligned}
+	&\bm{p}_{b_{k+1}}^{b_k}\approx\hat{\bm{p}}_{b_{k+1}}^{b_k}+\bm{v}_{b_{k+1}}^{b_k}\delta\bm{b}_a+\bm{J}^{\bm{p}}_{\bm{b}_\omega}\delta\bm{b}_{\omega_k} \\
+	&\bm{v}_{b_{k+1}}^{b_k}\approx\hat{\bm{v}}_{b_{k+1}}^{b_k}+\bm{J}^{\bm{v}}_{\bm{b}_{ak}}\delta\bm{b}_a+\bm{J}^{\bm{v}}_{\bm{b}_\omega}\delta\bm{b}_{\omega_k} \\
+	&\bm{q}_{b_{k+1}}^{b_k}\approx\hat{\bm{q}}_{b_{k+1}}^{b_k}\otimes 
+		\begin{bmatrix}
+			1 \\ \frac{1}{2}\bm{J}^{\bm{q}}_{\bm{b}_{\omega_k}}\delta\bm{b}_{\omega_k}
+		\end{bmatrix}.
+	%\bm{J}^{\bm{q}}_{\bm{b}_{\omega_k}}\delta\bm{b}_{\omega_k}
+	\end{aligned}
+	\right.
+	\label{eq.discrete}
+	\end{equation}
 
 
 
