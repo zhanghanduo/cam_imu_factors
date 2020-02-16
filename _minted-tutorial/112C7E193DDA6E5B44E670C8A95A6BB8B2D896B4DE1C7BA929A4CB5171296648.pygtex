@@ -1,0 +1,32 @@
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
+\PYG{k}{template}\PYG{o}{\PYGZlt{}}\PYG{k}{typename} \PYG{n}{T}\PYG{o}{\PYGZgt{}}
+\PYG{k+kt}{bool} \PYG{k}{operator}\PYG{p}{()(}\PYG{k}{const} \PYG{n}{T} \PYG{o}{*}\PYG{k}{const} \PYG{n}{w\PYGZus{}P\PYGZus{}i}\PYG{p}{,} \PYG{k}{const} \PYG{n}{T} \PYG{o}{*}\PYG{n}{w\PYGZus{}P\PYGZus{}j}\PYG{p}{,} \PYG{n}{T} \PYG{o}{*}\PYG{n}{residuals}\PYG{p}{)} \PYG{k}{const} \PYG{p}{\PYGZob{}}
+	\PYG{n}{T} \PYG{n}{t\PYGZus{}w\PYGZus{}ij}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{];}
+	\PYG{n}{t\PYGZus{}w\PYGZus{}ij}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]} \PYG{o}{=} \PYG{n}{w\PYGZus{}P\PYGZus{}j}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]} \PYG{o}{\PYGZhy{}} \PYG{n}{w\PYGZus{}P\PYGZus{}i}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{];}
+	\PYG{n}{t\PYGZus{}w\PYGZus{}ij}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]} \PYG{o}{=} \PYG{n}{w\PYGZus{}P\PYGZus{}j}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]} \PYG{o}{\PYGZhy{}} \PYG{n}{w\PYGZus{}P\PYGZus{}i}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{];}
+
+	\PYG{n}{residuals}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]} \PYG{o}{=} \PYG{p}{(}\PYG{n}{t\PYGZus{}w\PYGZus{}ij}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]} \PYG{o}{\PYGZhy{}} \PYG{n}{T}\PYG{p}{(}\PYG{n}{t\PYGZus{}x}\PYG{p}{))} \PYG{o}{/} \PYG{n}{T}\PYG{p}{(}\PYG{n}{t\PYGZus{}var1}\PYG{p}{);}
+	\PYG{n}{residuals}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]} \PYG{o}{=} \PYG{p}{(}\PYG{n}{t\PYGZus{}w\PYGZus{}ij}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]} \PYG{o}{\PYGZhy{}} \PYG{n}{T}\PYG{p}{(}\PYG{n}{t\PYGZus{}y}\PYG{p}{))} \PYG{o}{/} \PYG{n}{T}\PYG{p}{(}\PYG{n}{t\PYGZus{}var2}\PYG{p}{);}
+
+	\PYG{n}{T} \PYG{n}{relative\PYGZus{}q}\PYG{p}{[}\PYG{l+m+mi}{4}\PYG{p}{];}
+	\PYG{n}{relative\PYGZus{}q}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]} \PYG{o}{=} \PYG{n}{T}\PYG{p}{(}\PYG{n}{q\PYGZus{}w}\PYG{p}{);}
+	\PYG{n}{relative\PYGZus{}q}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]} \PYG{o}{=} \PYG{o}{\PYGZhy{}}\PYG{n}{T}\PYG{p}{(}\PYG{n}{q\PYGZus{}x}\PYG{p}{);}
+	\PYG{n}{relative\PYGZus{}q}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{]} \PYG{o}{=} \PYG{o}{\PYGZhy{}}\PYG{n}{T}\PYG{p}{(}\PYG{n}{q\PYGZus{}y}\PYG{p}{);}
+	\PYG{n}{relative\PYGZus{}q}\PYG{p}{[}\PYG{l+m+mi}{3}\PYG{p}{]} \PYG{o}{=} \PYG{o}{\PYGZhy{}}\PYG{n}{T}\PYG{p}{(}\PYG{n}{q\PYGZus{}z}\PYG{p}{);}
+
+	\PYG{n}{T} \PYG{n}{q\PYGZus{}w\PYGZus{}j}\PYG{p}{[}\PYG{l+m+mi}{4}\PYG{p}{];}
+	\PYG{n}{q\PYGZus{}w\PYGZus{}j}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]} \PYG{o}{=} \PYG{n}{w\PYGZus{}P\PYGZus{}j}\PYG{p}{[}\PYG{l+m+mi}{6}\PYG{p}{];}
+	\PYG{n}{q\PYGZus{}w\PYGZus{}j}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]} \PYG{o}{=} \PYG{n}{w\PYGZus{}P\PYGZus{}j}\PYG{p}{[}\PYG{l+m+mi}{3}\PYG{p}{];}
+	\PYG{n}{q\PYGZus{}w\PYGZus{}j}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{]} \PYG{o}{=} \PYG{n}{w\PYGZus{}P\PYGZus{}j}\PYG{p}{[}\PYG{l+m+mi}{4}\PYG{p}{];}
+	\PYG{n}{q\PYGZus{}w\PYGZus{}j}\PYG{p}{[}\PYG{l+m+mi}{3}\PYG{p}{]} \PYG{o}{=} \PYG{n}{w\PYGZus{}P\PYGZus{}j}\PYG{p}{[}\PYG{l+m+mi}{5}\PYG{p}{];}
+
+	\PYG{n}{T} \PYG{n}{error\PYGZus{}q}\PYG{p}{[}\PYG{l+m+mi}{4}\PYG{p}{];}
+	\PYG{n}{ceres}\PYG{o}{::}\PYG{n}{QuaternionProduct}\PYG{p}{(}\PYG{n}{relative\PYGZus{}q}\PYG{p}{,} \PYG{n}{q\PYGZus{}w\PYGZus{}j}\PYG{p}{,} \PYG{n}{error\PYGZus{}q}\PYG{p}{);}
+
+	\PYG{n}{residuals}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{]} \PYG{o}{=} \PYG{n}{T}\PYG{p}{(}\PYG{l+m+mi}{2}\PYG{p}{)} \PYG{o}{*} \PYG{n}{error\PYGZus{}q}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]} \PYG{o}{/} \PYG{n}{T}\PYG{p}{(}\PYG{n}{q\PYGZus{}var}\PYG{p}{);}
+	\PYG{n}{residuals}\PYG{p}{[}\PYG{l+m+mi}{3}\PYG{p}{]} \PYG{o}{=} \PYG{n}{T}\PYG{p}{(}\PYG{l+m+mi}{2}\PYG{p}{)} \PYG{o}{*} \PYG{n}{error\PYGZus{}q}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{]} \PYG{o}{/} \PYG{n}{T}\PYG{p}{(}\PYG{n}{q\PYGZus{}var}\PYG{p}{);}
+	\PYG{n}{residuals}\PYG{p}{[}\PYG{l+m+mi}{4}\PYG{p}{]} \PYG{o}{=} \PYG{n}{T}\PYG{p}{(}\PYG{l+m+mi}{2}\PYG{p}{)} \PYG{o}{*} \PYG{n}{error\PYGZus{}q}\PYG{p}{[}\PYG{l+m+mi}{3}\PYG{p}{]} \PYG{o}{/} \PYG{n}{T}\PYG{p}{(}\PYG{n}{q\PYGZus{}var}\PYG{p}{);}
+
+	\PYG{k}{return} \PYG{n+nb}{true}\PYG{p}{;}
+\PYG{p}{\PYGZcb{}}
+\end{Verbatim}

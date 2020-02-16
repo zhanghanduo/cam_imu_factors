@@ -1,0 +1,8 @@
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
+\PYG{k}{auto} \PYG{o}{*}\PYG{n}{imu\PYGZus{}factor} \PYG{o}{=} \PYG{k}{new} \PYG{n}{IMUFactor}\PYG{p}{(}\PYG{n}{pre\PYGZus{}integrations}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]);}
+\PYG{k}{auto} \PYG{n}{residual\PYGZus{}block\PYGZus{}info} \PYG{o}{=} \PYG{k}{new} \PYG{n}{ResidualBlockInfo}\PYG{p}{(}\PYG{n}{imu\PYGZus{}factor}\PYG{p}{,}
+  \PYG{k}{nullptr}\PYG{p}{,} \PYG{n}{vector}\PYG{o}{\PYGZlt{}}\PYG{k+kt}{double} \PYG{o}{*\PYGZgt{}}\PYG{p}{\PYGZob{}}\PYG{n}{para\PYGZus{}Pose}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{],} \PYG{n}{para\PYGZus{}SpeedBias}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{],}
+  \PYG{n}{para\PYGZus{}Pose}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{],} \PYG{n}{para\PYGZus{}SpeedBias}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]\PYGZcb{},}
+  \PYG{n}{vector}\PYG{o}{\PYGZlt{}}\PYG{k+kt}{int}\PYG{o}{\PYGZgt{}}\PYG{p}{\PYGZob{}}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{\PYGZcb{});}
+\PYG{n}{marginalization\PYGZus{}info}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{addResidualBlockInfo}\PYG{p}{(}\PYG{n}{residual\PYGZus{}block\PYGZus{}info}\PYG{p}{);}
+\end{Verbatim}

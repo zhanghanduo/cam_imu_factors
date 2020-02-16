@@ -1,0 +1,8 @@
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
+\PYG{k}{for} \PYG{p}{(}\PYG{k}{auto} \PYG{o}{\PYGZam{}}\PYG{n+nl}{it\PYGZus{}per\PYGZus{}id} \PYG{p}{:} \PYG{n}{f\PYGZus{}manager}\PYG{p}{.}\PYG{n}{feature}\PYG{p}{)} \PYG{p}{\PYGZob{}}
+  \PYG{k+kt}{int} \PYG{n}{imu\PYGZus{}i} \PYG{o}{=} \PYG{n}{it\PYGZus{}per\PYGZus{}id}\PYG{p}{.}\PYG{n}{start\PYGZus{}frame}\PYG{p}{;}
+  \PYG{k}{if} \PYG{p}{(}\PYG{n}{imu\PYGZus{}i} \PYG{o}{!=} \PYG{l+m+mi}{0}\PYG{p}{)}
+    \PYG{k}{continue}\PYG{p}{;}
+  \PYG{c+c1}{// Put the staring frames into the marginalization\_info}
+\PYG{p}{\PYGZcb{}}
+\end{Verbatim}

@@ -1,0 +1,11 @@
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
+\PYG{k}{if} \PYG{p}{(}\PYG{n}{last\PYGZus{}marginalization\PYGZus{}info} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{last\PYGZus{}marginalization\PYGZus{}info}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{valid}\PYG{p}{)}
+ \PYG{p}{\PYGZob{}}
+  \PYG{c+c1}{// construct new marginalization\_factor}
+  \PYG{k}{auto} \PYG{o}{*}\PYG{n}{marginalization\PYGZus{}factor} \PYG{o}{=} \PYG{k}{new}
+  \PYG{n}{MarginalizationFactor} \PYG{n}{last\PYGZus{}marginalization\PYGZus{}info}\PYG{p}{);}
+
+  \PYG{n}{problem}\PYG{p}{.}\PYG{n}{AddResidualBlock}\PYG{p}{(}\PYG{n}{marginalization\PYGZus{}factor}\PYG{p}{,} \PYG{k}{nullptr}\PYG{p}{,}
+  \PYG{n}{last\PYGZus{}marginalization\PYGZus{}parameter\PYGZus{}blocks}\PYG{p}{);}
+\PYG{p}{\PYGZcb{}}
+\end{Verbatim}

@@ -1,0 +1,8 @@
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
+\PYG{k+kt}{int} \PYG{n}{i} \PYG{o}{=} \PYG{n}{current\PYGZus{}frame\PYGZus{}count}\PYG{p}{;}
+\PYG{k+kt}{double} \PYG{n}{scale} \PYG{o}{=} \PYG{n}{dt} \PYG{o}{/} \PYG{p}{(}\PYG{n}{t} \PYG{o}{\PYGZhy{}} \PYG{n}{t\PYGZus{}buf}\PYG{p}{[}\PYG{n}{j}\PYG{p}{].}\PYG{n}{back}\PYG{p}{());}
+\PYG{n}{assert}\PYG{p}{(}\PYG{n}{scale} \PYG{o}{\PYGZlt{}=} \PYG{l+m+mi}{1} \PYG{o}{\PYGZam{}\PYGZam{}} \PYG{n}{scale} \PYG{o}{\PYGZgt{}=} \PYG{l+m+mi}{0}\PYG{p}{);}
+\PYG{n}{Eigen}\PYG{o}{::}\PYG{n}{Quaterniond} \PYG{n}{angular\PYGZus{}interp}\PYG{p}{;}
+\PYG{n}{Eigen}\PYG{o}{::}\PYG{n}{Vector3d} \PYG{n}{speed\PYGZus{}interp}\PYG{p}{;}
+\PYG{n}{angular\PYGZus{}interp} \PYG{o}{=} \PYG{n}{angular\PYGZus{}read\PYGZus{}buf}\PYG{p}{[}\PYG{n}{i}\PYG{p}{].}\PYG{n}{back}\PYG{p}{().}\PYG{n}{slerp}\PYG{p}{(}\PYG{n}{scale}\PYG{p}{,} \PYG{n}{angular\PYGZus{}read}\PYG{p}{);}
+\end{Verbatim}

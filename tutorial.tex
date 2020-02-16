@@ -254,17 +254,7 @@ practice. Further, each step of re-linearization, the integration from
 acceleration to velocity then to position has to be recomputed, which brings
 lots of additional time.
 
-\subsection{The Preintegration algorithm}
-
-\begin{figure}[!h]
-	\begin{center}\begin{tabular}{cc}
-		\includegraphics[height=3.3cm]{figures/IMU-sample_Image-frames_3D_illustration.png}&
-		\includegraphics[height=3.3cm]{figures/Preintegrated-IMU_image_3D_illustration.png}\\
-		(a) & (b) \\
-	\end{tabular}\end{center}
-	\caption{(a) Camera+IMU (b) Inertial-delta: preintegrated information \cite{Manifold2015}} 
-	\label{fig:VIN sensor information}
-\end{figure} 
+\section{The Preintegration algorithm}
 
 Todd Lupton first proposed the Preintegration method in 2012 \cite{Lupton2012}:
 integrate a large number of high rate IMU observations into a single
@@ -278,10 +268,20 @@ body frame at initial robot pose, instead of the traditional globally referenced
 frame, preventing the need to reintegrate the state dynamics at each
 optimization step.
 
+\begin{figure}[H]
+	\begin{center}\begin{tabular}{cc}
+			\includegraphics[height=3.3cm]{figures/IMU-sample_Image-frames_3D_illustration.png}&
+			\includegraphics[height=3.3cm]{figures/Preintegrated-IMU_image_3D_illustration.png}\\
+			(a) & (b) \\
+	\end{tabular}\end{center}
+	\caption{(a) Camera+IMU (b) Inertial-delta: preintegrated information \cite{Manifold2015}} 
+	\label{fig:VIN sensor information}
+\end{figure} 
+
 %With a stereo camera, Todd Lupton also provided a way to recover the absolute
 %global frame after 3 images of observation. However this is not possible with
 %monocular camera setup.
-\section{Formulation of Preintegration}\label{sec:preintegration}
+\subsection{Formulation of Preintegration}\label{sec:preintegration}
 For time consecutive frames $b_k$ and $b_{k+1}$, there exists several
 measurements in the time interval $[t_k, t_{k+1}]$. Given the bias estimation,
 we integrate them in the \textbf{local frame} $b_K$ as:
@@ -315,7 +315,7 @@ form). Here
 \label{eq.rot_incremental}
 \end{equation}
 
-The details can be found in Appendix (\textcolor{red}{TODO}).
+%The details can be found in Appendix (\textcolor{red}{TODO}).
 
 
 \subsection{Bias Correctioin of Incremental preintegration (Continuous Form)}
@@ -359,7 +359,7 @@ Otherwise if the estimation of bias changes significantly, which far away from t
 % \end{algorithm}
 
 
-\subsection{Bias Correctioin of Incremental preintegration (Continuous Form)}
+\subsection{Bias Correctioin of Incremental preintegration (Discrete Form)}
 
 In the code, we actually use the discrete form of preintegration using mean value method to deploy the preintegration, 
 which corresponds to "IntegrationBase" in the code.
@@ -395,9 +395,9 @@ As we are using stereo cameras, we don't need to estimate an unknown metric scal
 \end{itemize}
 
 
-\section{Alignment of Vision and IMU}
+\section{Alignment of Camera and IMU}
 
-Check the code in "VisualIMUAlignment"
+Check the code in \verb|VisualIMUAlignment|.
 
 \begin{itemize}
 	\item Gyroscope bias calibration.
@@ -407,20 +407,50 @@ Check the code in "VisualIMUAlignment"
 	
 \end{itemize}
 
-Set the rotation matrix between two camera frames $\bm{R}_{c_k}^{c_{k+1}}$, the orientation matrix of IMU is $\bm{R}_{b_k}^{b_{k+1}}$ obtained by IMU pre-integration), and the extrinsic calibration between camera and IMU is $\bm{R}_b^c$, then for any two adjacent frames, we have:
+Set the rotation matrix between two camera frames $\bm{R}^{c_k}_{c_{k+1}}$, the orientation matrix of IMU is $\bm{R}^{b_k}_{b_{k+1}}$ obtained by IMU pre-integration), and the extrinsic calibration between camera and IMU is $\bm{R}_b^c$, then for any two adjacent frames, we have:
 
 \begin{equation}
-	\bm{R}_{b_k}^{b_{k+1}}\bm{R}_b^c = \bm{R}_b^c\bm{R}_{c_k}^{c_{k+1}}
+	\bm{R}^{b_k}_{b_{k+1}}\bm{R}_b^c = \bm{R}_b^c\bm{R}^{c_k}_{c_{k+1}}
 \end{equation}
 
-Similarly, the orientation matrix of INS can be directly read as $\bm{R}_{w}^{b_{k+1}}$, the rotation from $k+1$ frame w.r.t. ENU coordinate, denoted as $w$. So we can obtain the rotation matrix to the absolute origin.
+\subsection{Alignment of Camera and INS \& GPS}
+
+Similarly, the orientation matrix of INS and GPS can be directly read as $\bm{R}_{w}^{b_{k+1}}$, the rotation from $k+1$ frame w.r.t. ENU coordinate, denoted as $w$. So we can obtain the rotation matrix to the absolute origin.
 
 \begin{equation}
-\bm{R}_{w}^{c_{k+1}} = \bm{R}_{w}^{b_{k+1}}\bm{R}_b^c
+\bm{R}^{w}_{c_{k+1}} = \bm{R}^{w}_{b_{k+1}}\bm{R}_b^c
 \end{equation}
 
+As the frequency and arrival of time of camera and INS sensors are not the same, we have to align the sensors first. The frequency of INS is much lower than that of IMU, about 10 - 20 HZ. So the pre-integration algorithm does not work for INS. So we use an interpolation method here.
 
+Take the camera frames as anchor frames and we count all the incoming INS readings during the intervals between consecutive camera frames.
 
+\begin{cppcode}
+// INSVector is the vector of INS measurements between two frames.
+double dt;
+// The first INS measurement of the interval
+if (i == 0)
+    dt = spdVector[i].first - prevTime;
+// The last INS measurement of the interval
+else if (i == spdVector.size() - 1) {
+    dt = curTime - spdVector[i - 1].first;
+    lastone = true;
+} else {
+    dt = spdVector[i].first - spdVector[i - 1].first;
+    lastone = false;
+}
+\end{cppcode}
+
+Then we use \verb|Eigen::slerp()| function to implement interpolation:
+
+\begin{cppcode}
+int i = current_frame_count;
+double scale = dt / (t - t_buf[j].back());
+assert(scale <= 1 && scale >= 0);
+Eigen::Quaterniond angular_interp;
+Eigen::Vector3d speed_interp;
+angular_interp = angular_read_buf[i].back().slerp(scale, angular_read);
+\end{cppcode}
 
 
 \chapter{Backend Optimization}
@@ -867,7 +897,7 @@ All the above codes can be seen in \verb|factor/projectionXFrameXCamFactor.cpp|.
 
 \section{IMU Factor}
 
-This section is quite complicated. 
+This section is quite complicated which requires the knowledge of preintegration.
 
 \subsection{Residuals}
 
@@ -1023,12 +1053,102 @@ We still need to calculate the partial derivatives of error state variables acco
 
 \section{INS Factor}
 
+\begin{cppcode}
+ 
+template<typename T>
+bool operator()(const T *const w_P_i, const T *w_P_j, T *residuals) const {
+	T t_w_ij[2];
+	t_w_ij[0] = w_P_j[0] - w_P_i[0];
+	t_w_ij[1] = w_P_j[1] - w_P_i[1];
+	
+	residuals[0] = (t_w_ij[0] - T(t_x)) / T(t_var);
+	residuals[1] = (t_w_ij[1] - T(t_y)) / T(t_var);
+	
+	T relative_q[4];
+	relative_q[0] = T(q_w);
+	relative_q[1] = -T(q_x);
+	relative_q[2] = -T(q_y);
+	relative_q[3] = -T(q_z);
+	
+	T q_w_j[4];
+	q_w_j[0] = w_P_j[6];
+	q_w_j[1] = w_P_j[3];
+	q_w_j[2] = w_P_j[4];
+	q_w_j[3] = w_P_j[5];
+	
+	T error_q[4];
+	ceres::QuaternionProduct(relative_q, q_w_j, error_q);
+	
+	residuals[2] = T(2) * error_q[1] / T(q_var);
+	residuals[3] = T(2) * error_q[2] / T(q_var);
+	residuals[4] = T(2) * error_q[3] / T(q_var);
+	
+	return true;
+}
+\end{cppcode}
 
+INS errors have two sources:
+
+\begin{enumerate}
+	\item INS incremental speed and camera estimated incremental position between last and current time stamps.
+	
+	\item INS realtime angular read and camera estimated orientation of current time stamp.
+\end{enumerate}
+
+\begin{equation}
+\label{equ:residual_ins}
+\mathbf{r}_{\mathrm{INS}}\left(\hat{\mathbf{z}}_{b_{k+1}}^{b_{k}}, \mathcal{X}\right) 
+=
+\left[\begin{array}{c}
+{\delta \boldsymbol{p}_{b_{k+1}}^{b_{k}}} \\ 
+{\delta \boldsymbol{q}_{b_{k+1}}^{b_{k}}}
+\end{array}\right]_{(2+3) \times 1} 
+= \left[\begin{array}{c}
+{\bm{R}_b^c\bm{p}_{c_{k+1}}^w - \bm{R}_b^c\bm{p}_{c_{k}}^w - \bm{v}_{b_{k+1}}^{b_k} \cdot dt} \\
+{\left(\bm{q}_{b_{k+1}}^w \right)^{-1} \cdot \bm{q}_b^c \cdot \bm{q}_{c_{k+1}}^w}
+\end{array}\right]
+\end{equation}
 
 
 \section{GPS Factor}
 
 
+
+
+
+\begin{cppcode}
+template<typename T>
+bool operator()(const T *const w_P_i, const T *w_P_j, T *residuals) const {
+	T t_w_ij[2];
+	t_w_ij[0] = w_P_j[0] - w_P_i[0];
+	t_w_ij[1] = w_P_j[1] - w_P_i[1];
+	
+	residuals[0] = (t_w_ij[0] - T(t_x)) / T(t_var1);
+	residuals[1] = (t_w_ij[1] - T(t_y)) / T(t_var2);
+	
+	T relative_q[4];
+	relative_q[0] = T(q_w);
+	relative_q[1] = -T(q_x);
+	relative_q[2] = -T(q_y);
+	relative_q[3] = -T(q_z);
+	
+	T q_w_j[4];
+	q_w_j[0] = w_P_j[6];
+	q_w_j[1] = w_P_j[3];
+	q_w_j[2] = w_P_j[4];
+	q_w_j[3] = w_P_j[5];
+	
+	T error_q[4];
+	ceres::QuaternionProduct(relative_q, q_w_j, error_q);
+	
+	residuals[2] = T(2) * error_q[1] / T(q_var);
+	residuals[3] = T(2) * error_q[2] / T(q_var);
+	residuals[4] = T(2) * error_q[3] / T(q_var);
+	
+	return true;
+}
+
+\end{cppcode}
 
 
 
@@ -1299,8 +1419,37 @@ Inspired by VINS~\cite{qin2017vins}, we introduce a two-way marginalization meth
 	
 	\begin{enumerate}
 		\item Transmit the residual item (size is $n$) of last prior factor to the current prior facotr and remove the states to be abandoned.
+		
+		\begin{cppcode}
+if (last_marginalization_info && last_marginalization_info->valid)
+ {
+  // construct new marginalization\_factor
+  auto *marginalization_factor = new 
+  MarginalizationFactor last_marginalization_info);
+  
+  problem.AddResidualBlock(marginalization_factor, nullptr,
+  last_marginalization_parameter_blocks);
+}
+		\end{cppcode}
+		
 		\item If there is IMU pre-integration items (when there is IMU sensor input), we put the IMU constraint between the $0th$ and $1th$ frame into the \verb|marginalization_info| class.
+		\begin{cppcode}
+auto *imu_factor = new IMUFactor(pre_integrations[1]);
+auto residual_block_info = new ResidualBlockInfo(imu_factor, 
+  nullptr, vector<double *>{para_Pose[0], para_SpeedBias[0],
+  para_Pose[1], para_SpeedBias[1]},
+  vector<int>{0, 1});
+marginalization_info->addResidualBlockInfo(residual_block_info);
+		\end{cppcode}
 		\item For the landmark points that were observed for the first time at the $0th$ frame, we put them into the \verb|marginalization_info| class.
+		\begin{cppcode}
+for (auto &it_per_id : f_manager.feature) {
+  int imu_i = it_per_id.start_frame;
+  if (imu_i != 0)
+    continue;
+  // Put the staring frames into the marginalization\_info
+}
+		\end{cppcode}
 		\item \verb|marginalization_info->preMarginalize()|: Calculate the \verb|parameter_blocks| and the corresponding jacobians and residuals before formulating the optimization problem.
 		\item \verb|marginalization_info->marginalize()|: Calculate the equation \eqref{eq:marginalization}.
 		
