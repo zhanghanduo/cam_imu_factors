@@ -1,0 +1,19 @@
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
+\PYG{k}{class} \PYG{n+nc}{MarginalizationInfo} \PYG{p}{\PYGZob{}}
+\PYG{c+c1}{// (1) All the observable factors (in form of residual block information).}
+\PYG{n}{std}\PYG{o}{::}\PYG{n}{vector}\PYG{o}{\PYGZlt{}}\PYG{n}{ResidualBlockInfo} \PYG{o}{*\PYGZgt{}} \PYG{n}{factors}\PYG{p}{;}
+\PYG{c+c1}{// (2) pos: size of all variables (local size).}
+\PYG{c+c1}{// (3) n: number of remaining variables to be optimized (local size).}
+\PYG{c+c1}{// (4) m: number of variables to be marginalized (local size).}
+\PYG{k+kt}{int} \PYG{n}{m}\PYG{p}{,} \PYG{n}{n}\PYG{p}{;}
+\PYG{c+c1}{// (5) The memory address of variables to be optimized.}
+\PYG{c+c1}{// <long, int> where first element is address of variable.}
+\PYG{c+c1}{// second element is the number of outputs (residuals)}
+\PYG{c+c1}{// in "parameter_block_sizes_" in ceres::cost_function}
+\PYG{c+c1}{// "parameter_block_sizes_":}
+\PYG{c+c1}{// parameters in cost_function is an array of pointers to arrays containing the}
+\PYG{c+c1}{// various parameter blocks. parameters has the same number of}
+\PYG{c+c1}{// elements as parameter_block_sizes_.  Parameter blocks are in the}
+\PYG{c+c1}{// same order as parameter_block_sizes_.i.e.,}
+\PYG{p}{\PYGZcb{}}
+\end{Verbatim}

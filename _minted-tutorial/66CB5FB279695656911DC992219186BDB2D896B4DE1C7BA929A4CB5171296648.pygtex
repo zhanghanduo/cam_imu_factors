@@ -1,0 +1,10 @@
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
+\PYG{k}{class} \PYG{n+nc}{MarginalizationInfo} \PYG{p}{\PYGZob{}}
+\PYG{c+c1}{// All the observable factors (in form of residual block information).}
+\PYG{n}{std}\PYG{o}{::}\PYG{n}{vector}\PYG{o}{\PYGZlt{}}\PYG{n}{ResidualBlockInfo} \PYG{o}{*\PYGZgt{}} \PYG{n}{factors}\PYG{p}{;}
+        \PYG{c+c1}{// pos: size of all variables (local size).}
+\PYG{c+c1}{// n: number of remaining variables to be optimized (local size).}
+\PYG{c+c1}{// m: number of variables to be marginalized (local size).}
+
+\PYG{p}{\PYGZcb{}}
+\end{Verbatim}

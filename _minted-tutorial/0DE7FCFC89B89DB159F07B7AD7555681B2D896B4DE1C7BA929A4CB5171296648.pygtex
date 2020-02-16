@@ -1,0 +1,8 @@
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
+\PYG{c+c1}{// Convert the 3D point under frame i to the frame j coordinate.}
+\PYG{n}{Eigen}\PYG{o}{::}\PYG{n}{Vector3d} \PYG{n}{pts\PYGZus{}camera\PYGZus{}i} \PYG{o}{=} \PYG{n}{pts\PYGZus{}i} \PYG{o}{/} \PYG{n}{inv\PYGZus{}dep\PYGZus{}i}\PYG{p}{;}
+\PYG{n}{Eigen}\PYG{o}{::}\PYG{n}{Vector3d} \PYG{n}{pts\PYGZus{}imu\PYGZus{}i}    \PYG{o}{=} \PYG{n}{qic} \PYG{o}{*} \PYG{n}{pts\PYGZus{}camera\PYGZus{}i} \PYG{o}{+} \PYG{n}{tic}\PYG{p}{;}
+\PYG{n}{Eigen}\PYG{o}{::}\PYG{n}{Vector3d} \PYG{n}{pts\PYGZus{}w}        \PYG{o}{=} \PYG{n}{Qi} \PYG{o}{*} \PYG{n}{pts\PYGZus{}imu\PYGZus{}i} \PYG{o}{+} \PYG{n}{Pi}\PYG{p}{;}
+\PYG{n}{Eigen}\PYG{o}{::}\PYG{n}{Vector3d} \PYG{n}{pts\PYGZus{}imu\PYGZus{}j}    \PYG{o}{=} \PYG{n}{Qj}\PYG{p}{.}\PYG{n}{inverse}\PYG{p}{()} \PYG{o}{*} \PYG{p}{(}\PYG{n}{pts\PYGZus{}w} \PYG{o}{\PYGZhy{}} \PYG{n}{Pj}\PYG{p}{);}
+\PYG{n}{Eigen}\PYG{o}{::}\PYG{n}{Vector3d} \PYG{n}{pts\PYGZus{}camera\PYGZus{}j} \PYG{o}{=} \PYG{n}{qic}\PYG{p}{.}\PYG{n}{inverse}\PYG{p}{()} \PYG{o}{*} \PYG{p}{(}\PYG{n}{pts\PYGZus{}imu\PYGZus{}j} \PYG{o}{\PYGZhy{}} \PYG{n}{tic}\PYG{p}{);}
+\end{Verbatim}

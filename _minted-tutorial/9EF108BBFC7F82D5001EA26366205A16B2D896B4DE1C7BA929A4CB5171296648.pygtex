@@ -1,0 +1,18 @@
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
+\PYG{k}{class} \PYG{n+nc}{FeaturePerId} \PYG{p}{\PYGZob{}}
+\PYG{c+c1}{//Index of this map point.}
+\PYG{k}{const} \PYG{k+kt}{int} \PYG{n}{feature\PYGZus{}id}\PYG{p}{;}
+\PYG{c+c1}{// The frame index of first observation of this map point.}
+\PYG{k+kt}{int} \PYG{n}{start\PYGZus{}frame}\PYG{p}{;}
+\PYG{c+c1}{// Vector of features in each frame(observation).}
+\PYG{c+c1}{// Its size is the number of observations.}
+\PYG{n}{vector}\PYG{o}{\PYGZlt{}}\PYG{n}{FeaturePerFrame}\PYG{o}{\PYGZgt{}} \PYG{n}{feature\PYGZus{}per\PYGZus{}frame}\PYG{p}{;}
+\PYG{c+c1}{// Size of @ref feature\_per\_frame, observation times.}
+\PYG{k+kt}{int} \PYG{n}{used\PYGZus{}num}\PYG{p}{;}
+\PYG{c+c1}{// Estimated depth in meters.}
+\PYG{k+kt}{double} \PYG{n}{estimated\PYGZus{}depth}\PYG{p}{;}
+\PYG{c+c1}{// Flag of depth estimation successful or not.}
+\PYG{c+c1}{// 0 haven't solve yet; 1 solve succ; 2 solve fail (estimated depth <0);}
+\PYG{k+kt}{int} \PYG{n}{solve\PYGZus{}flag}\PYG{p}{;}
+\PYG{p}{\PYGZcb{};}
+\end{Verbatim}

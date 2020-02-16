@@ -1,0 +1,10 @@
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
+\PYG{n}{Eigen}\PYG{o}{::}\PYG{n}{Map}\PYG{o}{\PYGZlt{}}\PYG{n}{Eigen}\PYG{o}{::}\PYG{n}{Matrix}\PYG{o}{\PYGZlt{}}\PYG{k+kt}{double}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{o}{\PYGZgt{}\PYGZgt{}} \PYG{n}{residual}\PYG{p}{(}\PYG{n}{residuals}\PYG{p}{);}
+\PYG{n}{residual}\PYG{o}{=}\PYG{n}{pre\PYGZus{}integration}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{evaluate}\PYG{p}{(}\PYG{n}{Pi}\PYG{p}{,} \PYG{n}{Qi}\PYG{p}{,} \PYG{n}{Vi}\PYG{p}{,} \PYG{n}{Bai}\PYG{p}{,} \PYG{n}{Bgi}\PYG{p}{,} \PYG{n}{Pj}\PYG{p}{,} \PYG{n}{Qj}\PYG{p}{,} \PYG{n}{Vj}\PYG{p}{,} \PYG{n}{Baj}\PYG{p}{,} \PYG{n}{Bgj}\PYG{p}{);}
+
+\PYG{n}{Eigen}\PYG{o}{::}\PYG{n}{Matrix}\PYG{o}{\PYGZlt{}}\PYG{k+kt}{double}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{o}{\PYGZgt{}} \PYG{n}{cov\PYGZus{}inv} \PYG{o}{=} \PYG{n}{pre\PYGZus{}integration}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{covariance}\PYG{p}{.}\PYG{n}{inverse}\PYG{p}{();}
+\PYG{n}{Eigen}\PYG{o}{::}\PYG{n}{Matrix}\PYG{o}{\PYGZlt{}}\PYG{k+kt}{double}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{o}{\PYGZgt{}} \PYG{n}{sqrt\PYGZus{}info} \PYG{o}{=}
+\PYG{n}{Eigen}\PYG{o}{::}\PYG{n}{LLT}\PYG{o}{\PYGZlt{}}\PYG{n}{Eigen}\PYG{o}{::}\PYG{n}{Matrix}\PYG{o}{\PYGZlt{}}\PYG{k+kt}{double}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{o}{\PYGZgt{}\PYGZgt{}}\PYG{p}{(}\PYG{n}{cov\PYGZus{}inv}\PYG{p}{).}\PYG{n}{matrixL}\PYG{p}{().}\PYG{n}{transpose}\PYG{p}{();}
+
+\PYG{n}{residual} \PYG{o}{=} \PYG{n}{sqrt\PYGZus{}info} \PYG{o}{*} \PYG{n}{residual}\PYG{p}{;}
+\end{Verbatim}
