@@ -1,0 +1,9 @@
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
+\PYG{n}{Eigen}\PYG{o}{::}\PYG{n}{Map}\PYG{o}{\PYGZlt{}}\PYG{n}{Eigen}\PYG{o}{::}\PYG{n}{Vector2d}\PYG{o}{\PYGZgt{}} \PYG{n}{residual}\PYG{p}{(}\PYG{n}{residuals}\PYG{p}{);}
+\PYG{n}{residual} \PYG{o}{=}  \PYG{n}{tangent\PYGZus{}base} \PYG{o}{*} \PYG{p}{(}\PYG{n}{pts\PYGZus{}camera\PYGZus{}j}\PYG{p}{.}\PYG{n}{normalized}\PYG{p}{()} \PYG{o}{\PYGZhy{}} \PYG{n}{pts\PYGZus{}j}\PYG{p}{.}\PYG{n}{normalized}\PYG{p}{());}
+\PYG{c+c1}{// Get the error on the normalized plane.}
+\PYG{k+kt}{double} \PYG{n}{dep\PYGZus{}j} \PYG{o}{=} \PYG{n}{pts\PYGZus{}camera\PYGZus{}j}\PYG{p}{.}\PYG{n}{z}\PYG{p}{();}
+\PYG{n}{residual} \PYG{o}{=} \PYG{p}{(}\PYG{n}{pts\PYGZus{}camera\PYGZus{}j} \PYG{o}{/} \PYG{n}{dep\PYGZus{}j}\PYG{p}{).}\PYG{n}{head}\PYG{o}{\PYGZlt{}}\PYG{l+m+mi}{2}\PYG{o}{\PYGZgt{}}\PYG{p}{()} \PYG{o}{\PYGZhy{}} \PYG{n}{pts\PYGZus{}j}\PYG{p}{.}\PYG{n}{head}\PYG{o}{\PYGZlt{}}\PYG{l+m+mi}{2}\PYG{o}{\PYGZgt{}}\PYG{p}{();}
+\PYG{c+c1}{// transform Euclidean distance to Mahalanobis distance}
+\PYG{n}{residual} \PYG{o}{=} \PYG{n}{sqrt\PYGZus{}info} \PYG{o}{*} \PYG{n}{residual}\PYG{p}{;}
+\end{Verbatim}

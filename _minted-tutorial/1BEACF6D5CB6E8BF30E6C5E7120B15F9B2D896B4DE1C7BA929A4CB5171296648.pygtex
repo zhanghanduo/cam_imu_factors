@@ -1,0 +1,14 @@
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
+\PYG{n}{Eigen}\PYG{o}{::}\PYG{n}{Quaterniond} \PYG{n}{dq\PYGZus{}rected} \PYG{o}{=} \PYG{n}{delta\PYGZus{}q} \PYG{o}{*} \PYG{n}{Utility}\PYG{o}{::}\PYG{n}{deltaQ}\PYG{p}{(}\PYG{n}{dq\PYGZus{}dbg} \PYG{o}{*} \PYG{n}{dbg}\PYG{p}{);}
+\PYG{n}{Eigen}\PYG{o}{::}\PYG{n}{Vector3d}    \PYG{n}{dv\PYGZus{}rected} \PYG{o}{=} \PYG{n}{delta\PYGZus{}v} \PYG{o}{+} \PYG{n}{dv\PYGZus{}dba} \PYG{o}{*} \PYG{n}{dba} \PYG{o}{+} \PYG{n}{dv\PYGZus{}dbg} \PYG{o}{*} \PYG{n}{dbg}\PYG{p}{;}
+\PYG{n}{Eigen}\PYG{o}{::}\PYG{n}{Vector3d}    \PYG{n}{dp\PYGZus{}rected} \PYG{o}{=} \PYG{n}{delta\PYGZus{}p} \PYG{o}{+} \PYG{n}{dp\PYGZus{}dba} \PYG{o}{*} \PYG{n}{dba} \PYG{o}{+} \PYG{n}{dp\PYGZus{}dbg} \PYG{o}{*} \PYG{n}{dbg}\PYG{p}{;}
+
+\PYG{n}{residuals}\PYG{p}{.}\PYG{n}{block}\PYG{o}{\PYGZlt{}}\PYG{l+m+mi}{3}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{o}{\PYGZgt{}}\PYG{p}{(}\PYG{n}{O\PYGZus{}P}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{)}  \PYG{o}{=}
+\PYG{n}{Qi}\PYG{p}{.}\PYG{n}{inverse}\PYG{p}{()} \PYG{o}{*} \PYG{p}{(}\PYG{l+m+mf}{0.5}\PYG{o}{*}\PYG{n}{G}\PYG{o}{*}\PYG{n}{sum\PYGZus{}dt}\PYG{o}{*}\PYG{n}{sum\PYGZus{}dt} \PYG{o}{+} \PYG{n}{Pj} \PYG{o}{\PYGZhy{}} \PYG{n}{Pi} \PYG{o}{\PYGZhy{}} \PYG{n}{Vi}\PYG{o}{*}\PYG{n}{sum\PYGZus{}dt}\PYG{p}{)} \PYG{o}{\PYGZhy{}} \PYG{n}{dp\PYGZus{}rected}\PYG{p}{;}
+\PYG{n}{residuals}\PYG{p}{.}\PYG{n}{block}\PYG{o}{\PYGZlt{}}\PYG{l+m+mi}{3}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{o}{\PYGZgt{}}\PYG{p}{(}\PYG{n}{O\PYGZus{}R}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{)}  \PYG{o}{=}
+\PYG{l+m+mi}{2} \PYG{o}{*} \PYG{p}{(}\PYG{n}{dq\PYGZus{}rected}\PYG{p}{.}\PYG{n}{inverse}\PYG{p}{()} \PYG{o}{*} \PYG{p}{(}\PYG{n}{Qi}\PYG{p}{.}\PYG{n}{inverse}\PYG{p}{()} \PYG{o}{*} \PYG{n}{Qj}\PYG{p}{)).}\PYG{n}{vec}\PYG{p}{();}
+\PYG{n}{residuals}\PYG{p}{.}\PYG{n}{block}\PYG{o}{\PYGZlt{}}\PYG{l+m+mi}{3}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{o}{\PYGZgt{}}\PYG{p}{(}\PYG{n}{O\PYGZus{}V}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{)}  \PYG{o}{=}
+\PYG{n}{Qi}\PYG{p}{.}\PYG{n}{inverse}\PYG{p}{()} \PYG{o}{*} \PYG{p}{(}\PYG{n}{G} \PYG{o}{*} \PYG{n}{sum\PYGZus{}dt} \PYG{o}{+} \PYG{n}{Vj} \PYG{o}{\PYGZhy{}} \PYG{n}{Vi}\PYG{p}{)} \PYG{o}{\PYGZhy{}} \PYG{n}{dv\PYGZus{}rected}\PYG{p}{;}
+\PYG{n}{residuals}\PYG{p}{.}\PYG{n}{block}\PYG{o}{\PYGZlt{}}\PYG{l+m+mi}{3}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{o}{\PYGZgt{}}\PYG{p}{(}\PYG{n}{O\PYGZus{}BA}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{)} \PYG{o}{=} \PYG{n}{Baj} \PYG{o}{\PYGZhy{}} \PYG{n}{Bai}\PYG{p}{;}
+\PYG{n}{residuals}\PYG{p}{.}\PYG{n}{block}\PYG{o}{\PYGZlt{}}\PYG{l+m+mi}{3}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{o}{\PYGZgt{}}\PYG{p}{(}\PYG{n}{O\PYGZus{}BG}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{)} \PYG{o}{=} \PYG{n}{Bgj} \PYG{o}{\PYGZhy{}} \PYG{n}{Bgi}\PYG{p}{;}
+\end{Verbatim}

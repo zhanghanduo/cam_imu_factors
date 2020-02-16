@@ -1,0 +1,41 @@
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
+\PYG{k}{class} \PYG{n+nc}{MarginalizationInfo} \PYG{p}{\PYGZob{}}
+\PYG{c+c1}{// (1) All the observable factors (in form of residual block information).}
+\PYG{n}{std}\PYG{o}{::}\PYG{n}{vector}\PYG{o}{\PYGZlt{}}\PYG{n}{ResidualBlockInfo} \PYG{o}{*\PYGZgt{}} \PYG{n}{factors}\PYG{p}{;}
+\PYG{c+c1}{// (2) pos: size of all variables (local size).}
+\PYG{c+c1}{// (3) n: number of remaining variables to be optimized (local size).}
+\PYG{c+c1}{// (4) m: number of variables to be marginalized (local size).}
+\PYG{k+kt}{int} \PYG{n}{m}\PYG{p}{,} \PYG{n}{n}\PYG{p}{;}
+
+\PYG{c+c1}{// "parameter\_block\_sizes":}
+\PYG{c+c1}{// parameters in cost\_function is an array of pointers to arrays}
+\PYG{c+c1}{// csame number of elements as parameter\_block\_sizes.}
+\PYG{c+c1}{// Parameter blocks are in the same order as parameter\_block\_sizes. i.e.,}
+\PYG{c+c1}{//   parameters\_[i] = double[parameter\_block\_sizes\_[i]]}
+
+\PYG{c+c1}{// (5) The memory address of variables to be optimized.}
+\PYG{c+c1}{// <long, int> where first element is address of variable.}
+\PYG{c+c1}{// second element is the number of outputs (residuals)}
+\PYG{n}{std}\PYG{o}{::}\PYG{n}{unordered\PYGZus{}map}\PYG{o}{\PYGZlt{}}\PYG{k+kt}{long}\PYG{p}{,} \PYG{k+kt}{int}\PYG{o}{\PYGZgt{}} \PYG{n}{parameter\PYGZus{}block\PYGZus{}size}\PYG{p}{;}
+\PYG{c+c1}{// (6) Corresponding data (double*) of "parameter\_block\_size".}
+\PYG{n}{std}\PYG{o}{::}\PYG{n}{unordered\PYGZus{}map}\PYG{o}{\PYGZlt{}}\PYG{k+kt}{long}\PYG{p}{,} \PYG{k+kt}{double} \PYG{o}{*\PYGZgt{}} \PYG{n}{parameter\PYGZus{}block\PYGZus{}data}\PYG{p}{;}
+\PYG{k+kt}{int} \PYG{n}{sum\PYGZus{}block\PYGZus{}size}\PYG{p}{;}
+\PYG{c+c1}{// Ids in "parameter\_block\_size", the memory address}
+\PYG{c+c1}{// of variables to be marginalized.}
+\PYG{n}{std}\PYG{o}{::}\PYG{n}{unordered\PYGZus{}map}\PYG{o}{\PYGZlt{}}\PYG{k+kt}{long}\PYG{p}{,} \PYG{k+kt}{int}\PYG{o}{\PYGZgt{}} \PYG{n}{parameter\PYGZus{}block\PYGZus{}idx}\PYG{p}{;} \PYG{c+c1}{//local size}
+
+\PYG{n}{std}\PYG{o}{::}\PYG{n}{vector}\PYG{o}{\PYGZlt{}}\PYG{k+kt}{int}\PYG{o}{\PYGZgt{}} \PYG{n}{keep\PYGZus{}block\PYGZus{}size}\PYG{p}{;} \PYG{c+c1}{//global size}
+\PYG{n}{std}\PYG{o}{::}\PYG{n}{vector}\PYG{o}{\PYGZlt{}}\PYG{k+kt}{int}\PYG{o}{\PYGZgt{}} \PYG{n}{keep\PYGZus{}block\PYGZus{}idx}\PYG{p}{;}  \PYG{c+c1}{//local size}
+\PYG{n}{std}\PYG{o}{::}\PYG{n}{vector}\PYG{o}{\PYGZlt{}}\PYG{k+kt}{double} \PYG{o}{*\PYGZgt{}} \PYG{n}{keep\PYGZus{}block\PYGZus{}data}\PYG{p}{;}
+\PYG{n}{Eigen}\PYG{o}{::}\PYG{n}{MatrixXd} \PYG{n}{linearized\PYGZus{}jacobians}\PYG{p}{;}
+\PYG{n}{Eigen}\PYG{o}{::}\PYG{n}{VectorXd} \PYG{n}{linearized\PYGZus{}residuals}\PYG{p}{;}
+\PYG{c+c1}{// Add residual block information (all variables to be optimized).}
+\PYG{k+kt}{void} \PYG{n+nf}{addResidualBlockInfo}\PYG{p}{(}\PYG{n}{ResidualBlockInfo} \PYG{o}{*}\PYG{n}{residual\PYGZus{}block\PYGZus{}info}\PYG{p}{);}
+
+\PYG{c+c1}{// Calculate Jacobian of each residual, and update "parameter\_block\_data"}
+\PYG{k+kt}{void} \PYG{n+nf}{preMarginalize}\PYG{p}{();}
+
+\PYG{c+c1}{// pos: dimension of all variables.}
+\PYG{k+kt}{void} \PYG{n+nf}{marginalize}\PYG{p}{();}
+\PYG{p}{\PYGZcb{}}
+\end{Verbatim}

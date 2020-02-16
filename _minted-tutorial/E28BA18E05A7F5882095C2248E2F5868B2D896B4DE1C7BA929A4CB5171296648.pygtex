@@ -1,0 +1,9 @@
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
+\PYG{k}{struct} \PYG{n}{ResidualBlockInfo}\PYG{p}{\PYGZob{}}
+\PYG{n}{ceres}\PYG{o}{::}\PYG{n}{CostFunction} \PYG{o}{*}\PYG{n}{\PYGZus{}cost\PYGZus{}function}\PYG{p}{,}
+\PYG{n}{ceres}\PYG{o}{::}\PYG{n}{LossFunction} \PYG{o}{*}\PYG{n}{\PYGZus{}loss\PYGZus{}function}\PYG{p}{,}
+\PYG{c+c1}{// Variable values to be optimized.}
+\PYG{n}{std}\PYG{o}{::}\PYG{n}{vector}\PYG{o}{\PYGZlt{}}\PYG{k+kt}{double} \PYG{o}{*\PYGZgt{}} \PYG{n}{\PYGZus{}parameter\PYGZus{}blocks}\PYG{p}{,}
+\PYG{c+c1}{// Variable values to be marginalized out.}
+\PYG{n}{std}\PYG{o}{::}\PYG{n}{vector}\PYG{o}{\PYGZlt{}}\PYG{k+kt}{int}\PYG{o}{\PYGZgt{}} \PYG{n}{\PYGZus{}drop\PYGZus{}set}\PYG{p}{\PYGZcb{}}
+\end{Verbatim}

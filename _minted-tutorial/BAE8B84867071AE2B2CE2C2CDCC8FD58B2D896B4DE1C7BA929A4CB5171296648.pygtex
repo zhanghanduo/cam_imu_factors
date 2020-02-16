@@ -1,0 +1,11 @@
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
+\PYG{c+c1}{// Line 301 in sslam\_estimator/src/factor/}
+\PYG{c+c1}{// marginalization\_factor.cpp.}
+\PYG{n}{Eigen}\PYG{o}{::}\PYG{n}{VectorXd} \PYG{n}{bmm} \PYG{o}{=} \PYG{n}{b}\PYG{p}{.}\PYG{n}{segment}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{m}\PYG{p}{);}
+\PYG{n}{Eigen}\PYG{o}{::}\PYG{n}{MatrixXd} \PYG{n}{Amr} \PYG{o}{=} \PYG{n}{A}\PYG{p}{.}\PYG{n}{block}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{m}\PYG{p}{,} \PYG{n}{m}\PYG{p}{,} \PYG{n}{n}\PYG{p}{);}
+\PYG{n}{Eigen}\PYG{o}{::}\PYG{n}{MatrixXd} \PYG{n}{Arm} \PYG{o}{=} \PYG{n}{A}\PYG{p}{.}\PYG{n}{block}\PYG{p}{(}\PYG{n}{m}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{n}\PYG{p}{,} \PYG{n}{m}\PYG{p}{);}
+\PYG{n}{Eigen}\PYG{o}{::}\PYG{n}{MatrixXd} \PYG{n}{Arr} \PYG{o}{=} \PYG{n}{A}\PYG{p}{.}\PYG{n}{block}\PYG{p}{(}\PYG{n}{m}\PYG{p}{,} \PYG{n}{m}\PYG{p}{,} \PYG{n}{n}\PYG{p}{,} \PYG{n}{n}\PYG{p}{);}
+\PYG{n}{Eigen}\PYG{o}{::}\PYG{n}{VectorXd} \PYG{n}{brr} \PYG{o}{=} \PYG{n}{b}\PYG{p}{.}\PYG{n}{segment}\PYG{p}{(}\PYG{n}{m}\PYG{p}{,} \PYG{n}{n}\PYG{p}{);}
+\PYG{n}{A} \PYG{o}{=} \PYG{n}{Arr} \PYG{o}{\PYGZhy{}} \PYG{n}{Arm} \PYG{o}{*} \PYG{n}{Amm\PYGZus{}inv} \PYG{o}{*} \PYG{n}{Amr}\PYG{p}{;}
+\PYG{n}{b} \PYG{o}{=} \PYG{n}{brr} \PYG{o}{\PYGZhy{}} \PYG{n}{Arm} \PYG{o}{*} \PYG{n}{Amm\PYGZus{}inv} \PYG{o}{*} \PYG{n}{bmm}\PYG{p}{;}
+\end{Verbatim}

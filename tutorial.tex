@@ -1,4 +1,4 @@
-\documentclass[12pt]{article}   % you have 10pt, 11pt, or 12pt options
+\documentclass[12pt]{report}   % you have 10pt, 11pt, or 12pt options
 
 \setlength{\textwidth}{17.2cm}     % if you change this, consider changing
 \setlength{\evensidemargin}{-.3cm} % side margins to retain centering
@@ -13,15 +13,21 @@
 %--------------------------------------
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
+\usepackage[]{minted}
+%\usepackage[fancyvrb=true]{listings}
+\usepackage{tcolorbox}
+\usepackage{etoolbox}
+\BeforeBeginEnvironment {minted} { \begin{tcolorbox} } 
+\AfterEndEnvironment {minted} { \end{tcolorbox} }%
 \usepackage{amssymb}
 \usepackage{latexsym}
 \usepackage{amsthm}
 \usepackage{enumerate}
 \usepackage{epsfig}
-\usepackage{graphicx}
+\usepackage{graphicx,caption,subcaption}
 \usepackage{color}
 \usepackage{float}
-\usepackage{subfig}
+%\usepackage{hypcap}
 \usepackage{amsmath}
 \usepackage{makeidx}
 \usepackage{fancyhdr}
@@ -103,6 +109,8 @@
 \def\area{\text{area}}
 \def\length{\text{length}}
 
+\newminted{cpp}{texcomments}
+
 
 \begin{document}  % necessary part of document
 
@@ -129,7 +137,7 @@ Jacobians.
 
 \newpage
 
-\section{Introduction}
+\chapter{Introduction}
 
 \vspace{1cm}
 In this work, we firstly introduce a perception system with a set of stereo
@@ -209,7 +217,9 @@ The motion model based on IMU reading can be stated as
 \label{eq.motion_model}
 \end{align}
 
-\section{The original VI problem}
+\chapter{Measurement Preprocessing}
+
+\section{The original IMU problem}
 For a system composed of an IMU and stereo camera navigating with $N$ camera
 poses, $K$ IMU samples per image and $M$ features, the naive VI problem includes
 robot poses at all IMU sample times.
@@ -244,7 +254,7 @@ practice. Further, each step of re-linearization, the integration from
 acceleration to velocity then to position has to be recomputed, which brings
 lots of additional time.
 
-\section{The Preintegration algorithm}
+\subsection{The Preintegration algorithm}
 
 \begin{figure}[!h]
 	\begin{center}\begin{tabular}{cc}
@@ -271,9 +281,9 @@ optimization step.
 %With a stereo camera, Todd Lupton also provided a way to recover the absolute
 %global frame after 3 images of observation. However this is not possible with
 %monocular camera setup.
-\subsection{Formulation of Preintegration}
+\section{Formulation of Preintegration}\label{sec:preintegration}
 For time consecutive frames $b_k$ and $b_{k+1}$, there exists several
-measurements in the time inverval $[t_k, t_{k+1}]$. Given the bias estimation,
+measurements in the time interval $[t_k, t_{k+1}]$. Given the bias estimation,
 we integrate them in the \textbf{local frame} $b_K$ as:
 
 \begin{equation}
@@ -305,7 +315,7 @@ form). Here
 \label{eq.rot_incremental}
 \end{equation}
 
-The details can be found in Appendix (TODO).
+The details can be found in Appendix (\textcolor{red}{TODO}).
 
 
 \subsubsection{Bias Correctioin of Incremental preintegration}
@@ -351,231 +361,982 @@ Otherwise if the estimation of bias changes significantly, which far away from t
 
 
 
+\chapter{System Initialization}
 
 
+As we are using stereo cameras, we don't need to estimate an unknown metric scale factor. The initialization can be simplified into two parts: (1) Vision only SFM (Structure from Motion) (2) Alignment of vision and IMU.
 
+\section{Vision-only SFM}
 
-\newpage 
-%-----------------------------------------------------------------------------------------
-\begin{appendices}
-	\lhead{\emph{Appendices}} % 
-	\section{Rotation representation -- Euler angles}
+\begin{itemize}
+	\item Solve the relative pose using essential matrix.
+	\item Triangulate the key points to get the depth and 3D position.
+	\item Solve the pose using PnP method.
+	\item Coordinate transformation.
 	
-	\subsection{Rotation matrix}
-	\begin{align*}
-		R &=R_{x}(\alpha) R_{y}(\beta) R_{z}(\gamma) \nonumber \\
-		  &= \begin{pmatrix} 
-				1 & 0 & 0 
-				\\ 0 & \cos(\alpha) & \sin(\alpha) 
-				\\ 0 & -\sin(\alpha) & \cos(\alpha) 
-			\end{pmatrix} 
-			\begin{pmatrix} 
-				\cos(\beta) & 0 & -\sin(\beta) \\ 
-				0 & 1 & 0 \\ 
-				\sin(\beta) &  0 & \cos(\beta) 
-			\end{pmatrix} 
-			\begin{pmatrix} 
-				\cos(\gamma) & \sin(\gamma) & 0 
-				\\ -\sin(\gamma) & \cos(\gamma) &  0 
-				\\ 0 & 0 & 1 
-			\end{pmatrix} \\	
-		\end{align*}
-		
-	\subsection{Rotation Rate Matrix}
-	\begin{align*}
-	E &= \begin{pmatrix} 
-			1 & 0 & -sin(\beta) \\ 
-			0 & cos(\alpha) & cos(\beta)sin(\alpha) \\ 
-			0 & -sin(\alpha) & cos(\beta)cos(\alpha) 
-		 \end{pmatrix} \\
-	\end{align*}
+\end{itemize}
+
+
+\section{Alignment of Vision and IMU}
+
+Check the code in "VisualIMUAlignment"
+
+\begin{itemize}
+	\item Gyroscope bias calibration.
+	\item Vlocity, Gravity vector initialization.
+	\item Gravity refinement.
+	\item Completing initialization.
 	
-	\subsection{Camera frame to Global transform}	
-Using the IMU's coordinates at the 1st pose as the global reference frame, the
-relative position of these two sensors at that time can be related by
-$\textbf{A}_{u2c}$ and $\textbf{T}_{u2c}$, : 
-\begin{eqnarray*}   % do not need dollar signs because eqnarray puts you in math
-	mode \textbf{A}_{u2c} & = & (\alpha_{u2c}, \beta_{u2c}, \gamma_{u2c}), \\
-	\textbf{T}_{u2c} & = & (x_{u2c}, y_{u2c}, z_{u2c})
-\end{eqnarray*}
+\end{itemize}
 
-And at the following poses, given IMU's states ($\textbf{R}^u_i$ and
-$\textbf{T}^u_i$), the camera's states ($\textbf{R}^c_i$ and $\textbf{T}^c_i$)
-can be obtained according to this formula:
+Set the rotation matrix between two camera frames $\bm{R}_{c_k}^{c_{k+1}}$, the orientation matrix of IMU is $\bm{R}_{b_k}^{b_{k+1}}$ obtained by IMU pre-integration), and the extrinsic calibration between camera and IMU is $\bm{R}_b^c$, then for any two adjacent frames, we have:
 
-\begin{align*}
-\textbf{R}^c_i &= \textbf{R}_{u2c} \textbf{R}^u_i \\
-\textbf{p}^c_i &= \textbf{p}^u_i + {\textbf{R}^u_i}'  \textbf{T}_{u2c}  
-\end{align*} 
+\begin{equation}
+	\bm{R}_{b_k}^{b_{k+1}}\bm{R}_b^c = \bm{R}_b^c\bm{R}_{c_k}^{c_{k+1}}
+\end{equation}
+
+Similarly, the orientation matrix of INS can be directly read as $\bm{R}_{w}^{b_{k+1}}$, the rotation from $k+1$ frame w.r.t. ENU coordinate, denoted as $w$. So we can obtain the rotation matrix to the absolute origin.
+
+\begin{equation}
+\bm{R}_{w}^{c_{k+1}} = \bm{R}_{w}^{b_{k+1}}\bm{R}_b^c
+\end{equation}
+
+
+
+
+
+\chapter{Backend Optimization}
+
+We utilize the "tightly coupled" optimization framework for the final pose output. The idea is to construct a joint optimization problem by putting the residuals of vision observations and IMU/GPS/INS observations to obtain a global optimal result.
+
+To constraint the number of optimization variables, we use sliding window method with the state variables:
+
+%\begin{equation}
+%	\begin{aligned}
+%		\mathcal{X} &= \left[  \mathbf{x}_0, \mathbf{x}_0, \cdots, \mathbf{x}_n, \mathbf{x}_c^b, \lambda_0, \lambda_1, \cdots, \lambda_m  \right] \\
+%		\mathbf{x}_k &= \left[  \mathbf{x}_{b_k}^w, \mathbf{v}_{b_k}^w, \mathbf{q}_{b_k}^w, \mathbf{v}_a, \mathbf{v_g}  \right], k\in{[0, n]} \\
+%		\mathbf{x}_c^b &= \left[ \mathbf{p}_c^b, \mathbf{q}_c^b \right]
+%	\end{aligned}
+%\end{equation}
+
+\begin{equation}
+\begin{aligned}
+\mathbf{\mathcal{X}} &= \left[  \mathbf{x}_0, \mathbf{x}_0, \cdots, \mathbf{x}_n, \lambda_0, \lambda_1, \cdots, \lambda_m  \right] \\
+\mathbf{x}_k &= \left[  \mathbf{x}_{b_k}^w, \mathbf{v}_{b_k}^w, \mathbf{q}_{b_k}^w  \right], k\in{[0, n]} 
+%\mathbf{x}_c^b &= \left[ \mathbf{p}_c^b, \mathbf{q}_c^b \right]
+\end{aligned} \label{states}
+\end{equation}
+
+where $\mathbf{x}_k$ represents all the camera states inside the sliding window containing $n+1$ keyframes (including positions, rotations, and velocities); $\mathbf{\lambda}_k$ is inverse depth of $m+1$ 3D points~\ref{civera2008inverse}.
+
+Additionally for IMU sensor, the states $\mathbf{x}_k$ also contain biases of gyroscope and accelerator $\mathbf{b}_g$ and $\mathbf{b}_a$.
+
+
+Here we list the parametrization of map points defined in the code:
+
+\begin{cppcode}
+class FeaturePerId {
+//Index of this map point.
+const int feature_id;
+// The frame index of first observation of this map point.
+int start_frame;
+// Vector of features in each frame(observation). 
+// Its size is the number of observations.
+vector<FeaturePerFrame> feature_per_frame;
+// Size of @ref feature\_per\_frame, observation times.
+int used_num;
+// Estimated depth in meters.
+double estimated_depth;
+// Flag of depth estimation successful or not.
+// 0 haven't solve yet; 1 solve succ; 2 solve fail (estimated depth <0);
+int solve_flag;
+};
+\end{cppcode}
+
+
+So the cost function for minimizing the residuals from all sensors can be formulated as a bundle adjustment problem:
+
+\begin{equation}
+	\min_{\mathcal{X}}  \left\{
+		\underbrace{
+			\left\|\mathbf{r}_{p}-\mathbf{H}_{p} \mathcal{X}\right\|^{2}
+		}_{\text{Marginalization Priors}}
+		+
+		\underbrace{
+			\sum_{k \in \mathcal{B}}\left\|\mathbf{r}_{\mathcal{B}}\left(\hat{\mathbf{z}}_{b_{k+1}}^{b_{k}}, \mathcal{X}\right)\right\|_{\mathbf{P}_{b_{k}+1}^{2}}^{2}
+		}_{\text{IMU/INS Factors}}
+		+
+		\underbrace{
+			\sum_{(l, j) \in \mathcal{C}} \rho\left(\left\|\mathbf{r}_{\mathcal{C}}\left(\hat{\mathbf{z}}_{l}^{c_{j}}, \mathcal{X}\right)\right\|_{\mathbf{P}_{l}^{c_{j}}}^{2}\right)
+		}_{\text{Vision Factors}}
+		\right\} \label{joint_optimization}
+\end{equation}
+
+Note that:
+\begin{itemize}
+	\item All the residuals represent Mahalanobis distance by dividing the scalar measurements with standard deviation (this process is called \textit{whitening} to eliminate the metrics \cite{dellaert2017factor}).
+	\item We use Huber loss function as the robust kernel function $\rho(\cdot)$ to tackle visual outliers.
+\end{itemize}
+
+
+\section{Vision Factors}
+
+
+\subsection{Residuals}
+
+	Vision factors are \textbf{reprojection error of feature points}. The visual residuals together with their Jacobian matrix calculation can be referred to in \verb|ProjectionFactor::Evaluate| function. 
 	
-\section{Preintegration VIN Jacobian}
-\label{apn:preintVin}
-\subsection{Jacobian of Inertial Delta to X}
-Based on the composition of $H(\textbf{x})$, the corresponding Jacobian matrix
-can be calculated. 
+	For the key point in the $i$th frame, we can get the projection location under the camera coordinate of the $j$th frame.
+	
+\begin{equation}
+	\left[\begin{array}{c}
+	{x_{c_{j}}} \\ {y_{c_{j}}} \\ {z_{c_{j}}} \\ {1}
+	\end{array}\right] =
+	\mathbf{T}_{b c}^{-1} 
+	\mathbf{T}_{w b_{j}}^{-1} 
+	\mathbf{T}_{w b_{i}} 
+	\mathbf{T}_{b c}
+	\left[\begin{array}{c}
+	{\frac{1}{\lambda} u_{c_{i}}} \\ 
+	{\frac{1}{\lambda} v_{c_{i}}} \\ 
+	{\frac{1}{\lambda}} \\ 
+	{1}
+	\end{array}\right]\label{reproj_error}
+\end{equation}
+where $u_{c_i}$ and $v_{c_i}$ are the image pixel location of $ith$ frame with inverse depth $\lambda$; $\mathbf{T}_{b c}$ is the transformation matrix ($4\times4$) from camera to IMU, $\mathbf{T}_{w b_{i}}$ is the transformation matrix from from $ith$ IMU frame to ENU coordinate.
+	
+	So its 3D position can be represented as:
+	
+\begin{equation}
+	\label{equ:pcj}
+	\begin{aligned} 
+	\mathbf{P}_{c_{j}} 
+	&=
+	\left[\begin{array}{c}
+	{x_{c_{j}}} \\ {y_{c_{j}}} \\ {z_{c_{j}}}
+	\end{array}\right] 
+	=
+	\mathbf{R}_{b c}^{\top} \left(
+	\mathbf{R}_{w b_{j}}^{\top} \left(
+	\mathbf{R}_{w b_{i}} \left(
+	\mathbf{R}_{b c} 
+	\mathbf{P}_{c_i}
+	+ \mathbf{p}_{b c} \right)
+	+ \mathbf{p}_{w b_{i}} - \mathbf{p}_{w b_{j}}\right)
+	- \mathbf{p}_{b c}\right) \\
+	&=
+	\mathbf{R}_{b c}^{\top} 
+	\mathbf{R}_{w b_{j}}^{\top} 
+	\mathbf{R}_{w b_{i}} 
+	\mathbf{R}_{b c} 
+	\mathbf{P}_{c_i} +
+	\mathbf{R}_{b c}^{\top}
+	\left(\mathbf{R}_{w b_{j}}^{\top} 
+	\left(\left(\mathbf{R}_{w b_{i}} \mathbf{p}_{b c}+\mathbf{p}_{w b_{i}}\right)
+	-\mathbf{p}_{w b_{j}}\right)-\mathbf{p}_{b c}\right) 
+	\end{aligned}
+\end{equation}
+	
+where 
 
-For camera observations of $(u_{ij}, v_{ij}, d_{ij})$ which represent the
-observation of the $i$th feature at the $j$th camera pose, 
-\begin{align}
-\frac{\partial u_{ij}}{\partial \textbf{F}_{ij}} &= [f/z_{ij}, 0, -fx_{ij}/z^2_{ij}] \\
-\frac{\partial v_{ij}}{\partial \textbf{F}_{ij}} &= [0, f/z_{ij}, -fy_{ij}/z^2_{ij}] \\
-\frac{\partial d_{ij}}{\partial \textbf{F}_{ij}} &= [0, 0, 1] \\
-\frac{\partial \textbf{F}_{ij}}{\partial \textbf{A}_{j}} &= R_{u2c} \frac{\partial R_{j}}{\partial \textbf{A}_{j}} (\textbf{F}_{i1} - \textbf{p}_{j}) \\
-\frac{\partial \textbf{F}_{ij}}{\partial \textbf{T}_{j}} &= -R_{u2c} R_{j} \\
-\frac{\partial \textbf{F}_{ij}}{\partial \textbf{A}_{u2c}} &= \frac{\partial R_{u2c}}{\partial \textbf{A}_{u2c}} R_{j}(\textbf{F}_{i1} - R'_{j} \textbf{T}_{u2c} - \textbf{p}_{j}) \\
-\frac{\partial \textbf{F}_{ij}}{\partial \textbf{T}_{u2c}} &= -R_{u2c}\\
-\frac{\partial \textbf{F}_{ij}}{\partial \textbf{F}_{i1}} &= R_{u2c} R_{j} 
-\end{align}
+\begin{equation}
+	\label{equ:pci}
+	\mathbf{P}_{c_i} = \frac{\bar{\mathbf{P}}_{c_{i}}}{\lambda} = 
+	\frac{1}{\lambda}
+	\left[\begin{array}{c}
+	{u_{c_{i}}} \\ {v_{c_{i}}} \\ {1}
+	\end{array}\right]
+\end{equation}
+	
+For the convenience of calculating Jacobian, we disassemble equation\ref{equ:pcj} and define the following variables:
 
-For $d\text{p}^+_{i}$,
+\begin{equation}
+\label{equ:f_predef}
+\begin{array}{l}
+{\mathbf{f}_{b_{i}}=\mathbf{R}_{b c} \mathbf{P}_{c_{i}}+\mathbf{p}_{b c}} \\ {\mathbf{f}_{w}=\mathbf{R}_{w b_{i}} \mathbf{f}_{b_{i}}+\mathbf{p}_{w b_{i}}} \\ {\mathbf{f}_{b_{j}}=\mathbf{R}_{w b_{j}}^{\top}\left(\mathbf{f}_{w}-\mathbf{p}_{w b_{j}}\right)} \\
+{\mathbf{P}_{c_{j}}=\mathbf{R}_{b c}^{\top}\left(\mathbf{f}_{b_{j}}-\mathbf{p}_{b c}\right)}
+\end{array}
+\end{equation}
 
-\begin{align}
-%%%%%%%
-% dp = R1 * (T2-T1-v1*dt-0.5*g*dt*dt) - ddpdbf*dbf - ddpdbw*dbw;
-\frac{\partial d\textbf{p}^+_{i}}{\partial \textbf{A}_{i}} &= \frac{\partial R_i}{\partial \textbf{A}_i} ( \textbf{p}_{i+1} - \textbf{p}_i - \textbf{v}_i \triangle t - \frac{1}{2} \textbf{g}^{\mathrm{n}} {(\triangle t)}^2 ) \\
-\frac{\partial d\textbf{p}^+_{i}}{\partial \textbf{p}_{i}} &= -R_i \\
-\frac{\partial d\textbf{p}^+_{i}}{\partial \textbf{p}_{i+1}} &= R_i \\
-\frac{\partial d\textbf{p}^+_{i}}{\partial \textbf{v}_{i}} &= -R_i \triangle t \\
-\frac{\partial d\textbf{p}^+_{i}}{\partial \textbf{g}} &= -\frac{1}{2} R_i {\triangle t}^2 \\
-\frac{\partial d\textbf{p}^+_{i}}{\partial \textbf{b}_f} &= - \frac{\partial \triangle \textbf{p}^+_t}{\partial \textbf{b}_f}\\
-\frac{\partial d\textbf{p}^+_{i}}{\partial \textbf{b}_\omega} &= - \frac{\partial \triangle \textbf{p}^+_t}{\partial \textbf{b}_\omega}
-\end{align}
-%%%%%
+\begin{cppcode}
+// Convert the 3D point under frame i to the frame j coordinate.
+Eigen::Vector3d pts_camera_i = pts_i / inv_dep_i;
+Eigen::Vector3d pts_imu_i    = qic * pts_camera_i + tic;
+Eigen::Vector3d pts_w        = Qi * pts_imu_i + Pi;     
+Eigen::Vector3d pts_imu_j    = Qj.inverse() * (pts_w - Pj); 
+Eigen::Vector3d pts_camera_j = qic.inverse() * (pts_imu_j - tic);
+\end{cppcode}
 
-For $d\text{v}_{i}$,
+So the vision residuals are:
 
-\begin{align}
-% dv = R1 * (v2-v1-g*dt) - jddvdbf*(bf-bf0) - jddvdbw*(bw-bw0)
-\frac{\partial d\textbf{v}_{i}}{\partial R_{i}} &= \frac{\partial R_i}{\partial \textbf{A}_i} (\textbf{v}_{i+1} - \textbf{v}_i - \textbf{g}^{\mathrm{n}} \triangle t) \\
-\frac{\partial d\textbf{v}_{i}}{\partial \textbf{v}_{i}} &= -R_i \\
-\frac{\partial d\textbf{v}_{i}}{\partial \textbf{v}_{i+1}} &= R_i \\
-\frac{\partial d\textbf{v}_{i}}{\partial \textbf{g}} &= -R_i \triangle t \\
-\frac{\partial d\textbf{v}_{i}}{\partial \textbf{b}_f} &= - \frac{\partial \triangle \textbf{v}_t}{\partial \textbf{b}_f}\\
-\frac{\partial d\textbf{v}_{i}}{\partial \textbf{b}_\omega} &= - \frac{\partial \triangle \textbf{v}_t}{\partial \textbf{b}_\omega}
-\end{align}
+\begin{equation}
+\label{equ:residual_visual}
+\mathbf{r}_{c} =
+\Sigma \cdot
+\left[\begin{array}{c}
+{\frac{x_{c_{j}}}{z_{c_{j}}}-u_{c_{j}}} \\ 
+{\frac{y_{c_{j}}}{z_{c_{j}}}-v_{c_{j}}}
+\end{array}\right] =
+\Sigma \cdot
+\left(\frac{P_{c_{j}}}{Z_j} - \hat{\bar{P}}_{c_{j}}\right)_2
+\in \mathbb{R}^{2 \times 1}
+\end{equation}
 
-For $d\textbf{A}_{i}$,
-\begin{align}
-% [a,b,g] = fnABG5R(Ru2*(Ru1)'); dphi = [a;b;g] - ddphidbw*dbw 
-\frac{\partial \triangle \textbf{A}_{i}}{\partial \textbf{A}_{i}} &= \frac{\partial fn}{\partial R} R_{i+1} \frac{\partial R_i}{\partial \textbf{A}_{i}}\\
-\frac{\partial \triangle \textbf{A}_{i}}{\partial \textbf{A}_{i+1}} &= \frac{\partial fn}{\partial R} \frac{\partial R_{i+1}}{\partial \textbf{A}_{i+1}} R_{1} \\
-\frac{\partial \triangle \textbf{A}_{i}}{\partial \textbf{b}_\omega} &= - \frac{\partial \triangle \textbf{A}_t}{\partial \textbf{b}_\omega}
-\end{align}
 
-where $d\textbf{P}_{i} = (dx_{i}, dy_{i}, dz_{i}) $, $d\textbf{v}_{i} =
-(dvx_{i}, dvy_{i}, dvz_{i}) $, and $d\textbf{A}_{i} = (d\alpha_{i}, d\beta_{i},
-d\gamma_{i}) $.
+\begin{cppcode}
+Eigen::Map<Eigen::Vector2d> residual(residuals);
+residual =  tangent_base * (pts_camera_j.normalized() - pts_j.normalized());
+// Get the error on the normalized plane.
+double dep_j = pts_camera_j.z();
+residual = (pts_camera_j / dep_j).head<2>() - pts_j.head<2>();
+// transform Euclidean distance to Mahalanobis distance
+residual = sqrt_info * residual; 
+\end{cppcode}
 
-\section{Naive VIN}
-\label{apn:naiveVin}
-The measurements model $H(\textbf{x})$ in Naive VIN can be broken into the
-following three parts:
 
-\begin{align}
-%E_{ij} &= \begin{pmatrix} 1 & 0 & -sin(\beta) \\ 0 & cos(\alpha) & cos(\beta)sin(\alpha) \\ 0 & -sin(\alpha) & cos(\beta)cos(\alpha) \end{pmatrix} \\
-\omega_{ij} &= E_{ij} (\textbf{A}_{(i+1)j} - \textbf{A}_{ij})/\triangle t + \textbf{b}_w \\
-\textbf{f}_{ij} &= R_{ij} ((\textbf{v}_{(i+1)j} - \textbf{v}_{ij}) / \triangle t - \textbf{g}^{\mathrm{n}}) + \textbf{b}_f \\
-\textbf{bZeros} &= \textbf{p}_{(i+1)j} - \textbf{p}_{ij} - \textbf{v}_{ij} \triangle t
-\end{align}
+\subsection{Covariance Matrix}
 
-where $i = 0,..., K-1$, and $R_{ij}, E_{ij} ( = \begin{pmatrix} 1 & 0 &
--\sin(\beta_{ij}) \\ 0 & \cos(\alpha_{ij}) & \cos(\beta_{ij})\sin(\alpha_{ij})
-\\ 0 & -\sin(\alpha_{ij}) & \cos(\beta_{ij})\cos(\alpha_{ij}) \end{pmatrix}) $
-correspond to the rotation matrix and rotation rate matrix for the IMU at the
-time step $i$ since the $j$th key camera frame respectively.
+We set a fixed covariance matrix by setting the image standard deviation as $1.5$ pixels.
 
-Putting all items together, $H(\textbf{x})$ can be written as:
+\begin{equation}
+\Sigma = 
+\begin{bmatrix}
+\frac{f}{1.5} & 0 \\
+0 & \frac{f}{1.5}
+\end{bmatrix}
+\end{equation}
 
-\begin{align} % R_{01} * ((\textbf{v}_{11} - \textbf{v}_{01}) / \triangle t - \textbf{g}) + \textbf{b}_f, E_i*(	extbf{A}_{0N} - \textbf{A}_{(K-1)(N-1)})/\triangle t + \textbf{b}_w, 
-H(\textbf{x}) &= (H_{camera}(\textbf{x}), H_{IMUraw}(\textbf{x}), H_{Tv}(\textbf{x})) \nonumber \\
-=& (\overbrace{{u}_{11}, {v}_{11}, ... , {u}_{M1}, {v}_{M1}, ..., {u}_{1N}, {v}_{1N}, ... , {u}_{MN}, {v}_{MN}}^{M \times N \times 2}, \nonumber \\ 
-& \overbrace{\omega\textbf{f}_{01}, \omega\textbf{f}_{11}, ... , \omega\textbf{f}_{(K-1)1}, ..., \omega\textbf{f}_{0(N-1)}, \omega\textbf{f}_{1(N-1)}, ... , \omega\textbf{f}_{(K-1)(N-1)}}^{K \times (N-1) \times 6}, \nonumber \\
-& \overbrace{\textbf{p}_2 - \textbf{p}_{1} - \textbf{v}_{1} \triangle t, \textbf{p}_{3} - \textbf{p}_{2} - \textbf{v}_{2} \triangle t, ... , \textbf{p}_{(N-1)K+1} - \textbf{p}_{(N-1)K} - \textbf{v}_{(N-1)K} \triangle t}^{K \times (N-1) \times 3}) \nonumber \\
-=& (\overbrace{f * x_{11} / z_{11} + cx_0, f * y_{11} / z_{11} + cy_0, ... , f * x_{MN} / z_{MN} + cx_0, f * y_{MN} / z_{MN} + cy_0, }^{M \times N \times 2}, \nonumber \\ 
-& \overbrace{E_i*(\textbf{A}_{11} - \textbf{A}_{01})/\triangle t + \textbf{b}_w, ..., R_{(K-1)(N-1)} * ((\textbf{v}_{0N} - \textbf{v}_{(K-1)(N-1)}) / \triangle t - \textbf{g}^{\mathrm{n}}) + \textbf{b}_f}^{K \times (N-1) \times 6}, \nonumber \\
-& \overbrace{\textbf{p}_2 - \textbf{p}_{1} - \textbf{v}_{1} \triangle t, \textbf{p}_{3} - \textbf{p}_{2} - \textbf{v}_{2} \triangle t, ... , \textbf{p}_{(N-1)K+1} - \textbf{p}_{(N-1)K} - \textbf{v}_{(N-1)K} \triangle t}^{K \times (N-1) \times 3}) 
-\end{align}
+\begin{cppcode}
+ProjectionFactor::sqrt_info = FOCAL_LENGTH / 1.5 * Matrix2d::Identity();
+\end{cppcode}
+
 
 \subsection{Jacobian Matrix}
 
-Based on the composition of $H(\textbf{x})$, the corresponding Jacobian matrix
-can be calculated. 
+Jacobian matrix is defined as the derivatives of visual residuals to the states and reverse depth values of two time stamps.
 
-For camera observations of $(u_{ij}, v_{ij}, d_{ij})$ which represent the
-observation of the $i$th feature at the $j$th camera pose, 
-\begin{align}
-% bZeros: \textbf{bZeros} &= \textbf{T}_{i+1} - \textbf{T}_{i} - \textbf{v}_{i} \triangle t 
-\frac{\partial u_{ij}}{\partial \textbf{F}_{ij}} &= [f/z_{ij}, 0, -fx_{ij}/z^2_{ij}] \\
-\frac{\partial v_{ij}}{\partial \textbf{F}_{ij}} &= [0, f/z_{ij}, -fy_{ij}/z^2_{ij}] \\
-\frac{\partial d_{ij}}{\partial \textbf{F}_{ij}} &= [0, 0, 1] \\
-%% X = Ru2c * Ru * (X0 - Ru'* Tu2c - Tu)
-%%   = Ru2c * Ru * (X0 - Tu)- Ru2c * Tu2c
-\frac{\partial \textbf{F}_{ij}}{\partial \textbf{A}_{0j}} &= R_{u2c} \frac{\partial R_{0j}}{\partial \textbf{A}_{0j}} (\textbf{F}_{i1} - \textbf{p}_{0j}) \\
-\frac{\partial \textbf{F}_{ij}}{\partial \textbf{p}_{0j}} &= -R_{u2c} R_{0j} \\
-\frac{\partial \textbf{F}_{ij}}{\partial \textbf{A}_{u2c}} &= \frac{\partial R_{u2c}}{\partial \textbf{A}_{u2c}} R_{0j}(\textbf{F}_{i1} - R'_{0j} \textbf{T}_{u2c} - \textbf{p}_{0j}) \\
-\frac{\partial \textbf{F}_{ij}}{\partial \textbf{T}_{u2c}} &= -R_{u2c}\\
-\frac{\partial \textbf{F}_{ij}}{\partial \textbf{F}_{fi}} &= R_{u2c} R_{0j} 
-\end{align}
+\begin{equation}
+\mathbf{J} = 
+\frac{\partial \mathbf{r}_{c}}{\partial \mathbf{X}_{c}} =
+\begin{bmatrix}
+\frac{\partial \mathbf{P}_{c_{j}}}
+{\partial\left[\begin{array}{c}{\delta \mathbf{p}_{w b_{i}}} \\ 
+	{\delta \boldsymbol{\theta}_{w b_{i}}}\end{array}\right]} 
+&
+\frac{\partial \mathbf{P}_{c_{j}}}
+{\partial\left[\begin{array}{c}{\delta \mathbf{p}_{w b_{j}}} \\ 
+	{\delta \boldsymbol{\theta}_{w b_{j}}}\end{array}\right]} 
+&
+\frac{\partial \mathbf{P}_{c_{j}}}
+{\partial\left[\begin{array}{c}{\delta \mathbf{p}_{bc}} \\ 
+	{\delta \boldsymbol{\theta}_{bc}}\end{array}\right]} 
+&
+\frac{\partial \mathbf{P}_{c_{j}}}{\partial \delta \lambda}
+\end{bmatrix} \label{jacobian}
+\end{equation}
 
-For $\omega_{ij}$,
+According to the chain rule, we have
 
-\begin{align}
-%%%%%%%
-% \omega_i &= E_i (\textbf{A}_{i+1} - \textbf{A}_i)/\triangle t + \textbf{b}_w
-%\left \{
-%\begin{align*}
-\frac{\partial \omega_{ij}}{\partial \textbf{A}_{ij}} &= \frac{\partial E_{ij}}{\partial \textbf{A}_{ij}} (\textbf{A}_{(i+1)j} - \textbf{A}_{ij})/\triangle t + E_{ij} (- \frac{\partial \textbf{A}_{ij}}{\partial \textbf{A}_{ij}})/\triangle t \nonumber \\
-&= (\frac{\partial E_{ij}}{\partial \textbf{A}_{ij}} (\textbf{A}_{(i+1)j} - \textbf{A}_{ij}) - E_{ij})/\triangle t \\
-\frac{\partial E_{ij}}{\partial \textbf{A}_{ij}} &= [\frac{\partial E_{ij}}{\partial \alpha_{ij}}, \frac{\partial E_{ij}}{\partial \beta_{ij}}, \frac{\partial E_{ij}}{\partial \gamma_{ij}}] \\
-%\frac{\partial \omega_{ij}}{\partial \alpha_{ij}} &= \frac{\partial E_{ij}}{\partial \alpha_{ij}}*(\textbf{A}_{(i+1)j} - \textbf{A}_{ij})/\triangle t + E_{ij}*(- \frac{\partial \textbf{A}_{ij}}{\partial \alpha_{ij}})/\triangle t \\
-%\frac{\partial \omega_{ij}}{\partial \beta_{ij}} &= \frac{\partial E_{ij}}{\partial \beta_{ij}}*(\textbf{A}_{(i+1)j} - \textbf{A}_{ij})/\triangle t + E_{ij}*(- \frac{\partial \textbf{A}_{ij}}{\partial \beta_{ij}})/\triangle t \\
-%\frac{\partial \omega_{ij}}{\partial \gamma_{ij}} &= \frac{\partial E_{ij}}{\partial \gamma_{ij}}*(\textbf{A}_{(i+1)j} - \textbf{A}_{ij})/\triangle t + E_{ij}*(- \frac{\partial \textbf{A}_{ij}}{\partial \gamma_{ij}})/\triangle t \\
-\frac{\partial \omega_{ij}}{\partial \textbf{A}_{(i+1)j}} &= E_{ij} \frac{\partial \textbf{A}_{(i+1)j}}{\partial \textbf{A}_{(i+1)j}}/\triangle t \\
-&= E_{ij}/\triangle t \\
-\frac{\partial \omega_{ij}}{\partial b_{\omega}} &= I_{3\times 3} 
-%\right.
-\end{align}
-%%%%%
+\begin{equation}
+\begin{aligned}
+\mathbf{J} 
+&= 
+\frac{\partial \mathbf{r}_{c}}{\partial \mathbf{P}_{c_{j}}}
+\frac{\partial \mathbf{P}_{c_{j}}}{\partial \mathbf{X}_{c}}
+=
+\mathbf{J}_1 \mathbf{J}_2 \\
+&=
+\frac{\partial \mathbf{r}_{c}}{\partial \mathbf{P}_{c_{j}}}
+\begin{bmatrix}
+\frac{\partial \mathbf{P}_{c_{j}}}
+{\partial\left[\begin{array}{c}{\delta \mathbf{p}_{w b_{i}}} \\ 
+	{\delta \boldsymbol{\theta}_{w b_{i}}}\end{array}\right]} 
+&
+\frac{\partial \mathbf{P}_{c_{j}}}
+{\partial\left[\begin{array}{c}{\delta \mathbf{p}_{w b_{j}}} \\ 
+	{\delta \boldsymbol{\theta}_{w b_{j}}}\end{array}\right]} 
+&
+\frac{\partial \mathbf{P}_{c_{j}}}
+{\partial\left[\begin{array}{c}{\delta \mathbf{p}_{bc}} \\ 
+	{\delta \boldsymbol{\theta}_{bc}}\end{array}\right]} 
+&
+\frac{\partial \mathbf{P}_{c_{j}}}{\partial \delta \lambda}
+\end{bmatrix}
+\end{aligned}
+\end{equation}
 
-For $\textbf{f}_{ij}$,
 
-\begin{align}
-% a_i \textbf{a}_i &= R_i ((\textbf{v}_{i+1} - \textbf{v}_i) / \triangle t - \textbf{g}) + \textbf{b}_f 
-\frac{\partial \textbf{f}_{ij}}{\partial \textbf{A}_{ij}} &= \frac{\partial R_{ij}} {\textbf{A}_{ij}} ((\textbf{v}_{i+1} - \textbf{v}_i) / \triangle t - \textbf{g}) \\
-\frac{\partial R_{ij}}{\partial \textbf{A}_{ij}} &= [\frac{\partial R_{ij}}{\partial \alpha_{ij}}, \frac{\partial R_{ij}}{\partial \beta_{ij}}, \frac{\partial R_{ij}}{\partial \gamma_{ij}}] \\
-\frac{\partial \textbf{f}_{ij}}{\partial \textbf{v}_{(i+1)j}} &= R_{ij} / \triangle t \\
-\frac{\partial \textbf{f}_{ij}}{\partial \textbf{v}_{ij}} &= - R_{ij} / \triangle t \\
-\frac{\partial \textbf{f}_{ij}}{\partial \textbf{g}} &= - R_{ij}\\
-\frac{\partial \textbf{f}_{ij}}{\partial b_{f}} &= I_{3\times 3} 
-\end{align}
+For the first part $\mathbf{J}_1$, according to equation\eqref{equ:residual_visual}:
 
-For $\textbf{bZeros}_{ij}$,
-\begin{align}
-% bZeros: \textbf{bZeros} &= \textbf{T}_{i+1} - \textbf{T}_{i} - \textbf{v}_{i} \triangle t 
-\frac{\partial \textbf{bZeros}_{ij}}{\partial \textbf{p}_{(i+1)j}} &= I_{3\times 3} \\
-\frac{\partial \textbf{bZeros}_{ij}}{\partial \textbf{p}_{ij}} &= - I_{3\times 3} \\
-\frac{\partial \textbf{bZeros}_{ij}}{\partial \textbf{v}_{ij}} &= - I_{3\times 3} \triangle t  
-\end{align}
+\begin{equation}
+\mathbf{J}_1 =
+\frac{\partial \mathbf{r}_{c}}{\partial \mathbf{P}_{c_{j}}} = 
+\Sigma \cdot
+\left[\begin{array}{ccc}
+{\frac{1}{z_{c_{j}}}} & {0} & {-\frac{x_{c_{j}}}{z_{c_{j}}^{2}}} \\ 
+{0} & {\frac{1}{z_{c_{j}}}} & {-\frac{y_{c_{j}}^{2}}{z_{c_{j}}^{2}}}
+\end{array}\right]
+\in \mathbb{R}^{2 \times 3}
+\end{equation}
 
+\begin{cppcode}
+Eigen::Matrix<double, 2, 3> reduce(2, 3);
+reduce << 1. / dep_j, 0, -pts_camera_j(0) / (dep_j * dep_j),
+0, 1. / dep_j, -pts_camera_j(1) / (dep_j * dep_j);
+reduce = sqrt_info * reduce;
+\end{cppcode}
+
+
+Then for the second part $\mathbf{J}_2$, according to equation\eqref{equ:pcj}\eqref{equ:pci}\eqref{equ:f_predef}, we get the partial derivatives of different state variables:
+
+\begin{enumerate}
+	
+	\item[(a)] Partial derivatives of {\color{blue} state variables $[\delta p^{w}_{b_{i}},\delta \theta ^{w}_{b_{i}}]$ at $i$ th timestamp}
 
 	
-\end{appendices}
+	\begin{equation}
+	\begin{aligned}
+	\frac{\partial \mathbf{P}_{c_{j}}}{\partial \delta \mathbf{p}_{w b_{i}}} 
+	&=
+	\mathbf{R}_{b c}^{\top} \mathbf{R}_{w b_{j}}^{\top} 
+	\\
+	\frac{\partial \mathbf{P}_{c_{j}}}{\partial \delta \boldsymbol{\theta}_{w b_{i}}} 
+	&=
+	\frac{\partial \mathbf{R}_{b c}^{\top} \mathbf{R}_{w b_{j}}^{\top} \mathbf{R}_{w b_{i}}\left(\mathbf{I}+\left[\delta \boldsymbol{\theta}_{wb_{i}}\right]_{\times}\right) \mathbf{f}_{b_{i}}}{\partial \delta \boldsymbol{\theta}_{wb_{i}}} 
+	\quad \text{(Abandon irrelavent parts)} \\
+	&=
+	-\mathbf{R}_{b c}^{\top} \mathbf{R}_{w b_{j}}^{\top} \mathbf{R}_{w b_{i}}\left[\mathbf{f}_{b_{i}}\right]_{\times}
+	\end{aligned}
+	\end{equation}
+	
+	\begin{equation}
+	\mathbf{J}_2[0] 
+	=
+	\frac{\partial \mathbf{P}_{c_{j}}}
+	{\partial \left[\begin{array}{c}{\delta \mathbf{p}_{w b_{i}}} \\ 
+		{\delta \boldsymbol{\theta}_{w b_{i}}}\end{array}\right]} 
+	=
+	\begin{bmatrix}
+	\mathbf{R}_{b c}^{\top} \mathbf{R}_{w b_{j}}^{\top} & 
+	-\mathbf{R}_{b c}^{\top} \mathbf{R}_{w b_{j}}^{\top} \mathbf{R}_{w b_{i}}\left[\mathbf{f}_{b_{i}}\right]_{\times}
+	\end{bmatrix}
+	\in \mathbb{R}^{3 \times 6}
+	\end{equation}
+	
+	\item[(b)] Partial derivatives of {\color{blue} state variables $[\delta p^{w}_{b_{j}},\delta \theta ^{w}_{b_{j}}]$ at $j$ timestamp}
+	
+	\begin{equation}
+	\begin{aligned}
+	\frac{\partial \mathbf{P}_{c_{j}}}{\partial \delta \mathbf{p}_{w b_{j}}} 
+	&=
+	-\mathbf{R}_{b c}^{\top} \mathbf{R}_{w b_{j}}^{\top} 
+	\\
+	\frac{\partial \mathbf{P}_{c_{j}}}{\partial \delta \boldsymbol{\theta}_{w b_{j}}} 
+	&=
+	\frac{\partial \mathbf{R}_{b c}^{\top}\left(\mathbf{I}-\left[\delta \boldsymbol{\theta}_{w b_{j}}\right]_{\times}\right) \mathbf{R}_{w b_{j}}^{\top}\left(\mathbf{f}_{w}-\mathbf{p}_{w b_{j}}\right)}
+	{\partial \delta \boldsymbol{\theta}_{w b_{j}}} \\
+	&=
+	\frac{\partial \mathbf{R}_{b c}^{\top}\left(\mathbf{I}-\left[\delta \boldsymbol{\theta}_{w b_{j}}\right]_{\times}\right) \mathbf{f}_{b_{j}}}
+	{\partial \delta \boldsymbol{\theta}_{w b_{j}}} \\
+	&=
+	\mathbf{R}_{b c}^{\top}\left[\mathbf{f}_{b_{j}}\right]_{\times}
+	\end{aligned}
+	\end{equation}
+	
+	\begin{equation}
+	\mathbf{J}_2[1]
+	=
+	\frac{\partial \mathbf{P}_{c_{j}}}
+	{\partial \left[\begin{array}{c}{\delta \mathbf{p}_{w b_{j}}} \\ 
+		{\delta \boldsymbol{\theta}_{w b_{j}}}\end{array}\right]} 
+	=
+	\begin{bmatrix}
+	-\mathbf{R}_{b c}^{\top} \mathbf{R}_{w b_{j}}^{\top} 
+	& 
+	\mathbf{R}_{b c}^{\top}\left[\mathbf{f}_{b_{j}}\right]_{\times}
+	\end{bmatrix}
+	\in \mathbb{R}^{3 \times 6}
+	\end{equation}
+	
+	\item[(c)] Partial derivatives of {\color{blue} extrinsic parameters between IMU and cameras $[\delta p^{b}_{c},\delta \theta ^{b}_{c}]$} (Optional)
+	
+	\begin{equation}
+	\begin{aligned}
+	\frac{\partial \mathbf{P}_{c_{j}}}{\partial \delta \mathbf{p}_{bc}} 
+	={}& 
+	\mathbf{R}_{b c}^{\top}\left(\mathbf{R}_{w b_{j}}^{\top} \mathbf{R}_{w b_{i}}-\mathbf{I}_{3 \times 3}\right) 
+	\\
+	\frac{\partial \mathbf{P}_{c_{j}}}{\partial \delta \boldsymbol{\theta}_{bc}} 
+	={}&
+	\frac{\partial 
+		\mathbf{R}_{b c}^{\top} 
+		\mathbf{R}_{w b_{j}}^{\top} 
+		\mathbf{R}_{w b_{i}} 
+		\mathbf{R}_{b c} 
+		\mathbf{P}_{c_i}}
+	{\partial \delta \boldsymbol{\theta}_{bc}} 
+	+
+	\frac{\partial 
+		\mathbf{R}_{b c}^{\top}
+		\left(\mathbf{R}_{w b_{j}}^{\top} 
+		\left(\left(\mathbf{R}_{w b_{i}} \mathbf{p}_{b c}+\mathbf{p}_{w b_{i}}\right)
+		-\mathbf{p}_{w b_{j}}\right)-\mathbf{p}_{b c}\right)}
+	{\partial \delta \boldsymbol{\theta}_{bc}} \\
+	={}&
+	\frac{\partial 
+		\left(\mathbf{I}-\left[\delta \boldsymbol{\theta}_{bc}\right]_{\times}\right)
+		\mathbf{R}_{b c}^{\top} 
+		\mathbf{R}_{w b_{j}}^{\top} 
+		\mathbf{R}_{w b_{i}} 
+		\mathbf{R}_{b c} 
+		\left(\mathbf{I}+\left[\delta \boldsymbol{\theta}_{bc}\right]_{\times}\right)
+		\mathbf{P}_{c_i}}
+	{\partial \delta \boldsymbol{\theta}_{bc}} \\
+	&+
+	\frac{\partial 
+		\left(\mathbf{I}-\left[\delta \boldsymbol{\theta}_{bc}\right]_{\times}\right)
+		\mathbf{R}_{b c}^{\top}
+		\left(\mathbf{R}_{w b_{j}}^{\top} 
+		\left(\left(\mathbf{R}_{w b_{i}} \mathbf{p}_{b c}+\mathbf{p}_{w b_{i}}\right)
+		-\mathbf{p}_{w b_{j}}\right)-\mathbf{p}_{b c}\right)}
+	{\partial \delta \boldsymbol{\theta}_{bc}} \\
+	={}&
+	\left(-\mathbf{R}_{b c}^{\top} \mathbf{R}_{w b_{j}}^{\top} \mathbf{R}_{w b_{i}} \mathbf{R}_{b c}\left[\mathbf{P}_{c_{i}}\right]_{\times} + \left[\mathbf{R}_{b c}^{\top} \mathbf{R}_{w b_{j}}^{\top} \mathbf{R}_{w b_{i}} \mathbf{R}_{b c} \mathbf{P}_{c_{i}}\right]_{\times}\right) \\
+	&+
+	\left[\mathbf{R}_{b c}^{\top}\left(\mathbf{R}_{w b_{j}}^{\top}\left(\left(\mathbf{R}_{w b_{i}} \mathbf{p}_{b c}+\mathbf{p}_{w b_{i}}\right)-\mathbf{p}_{w b_{j}}\right)-\mathbf{p}_{b c}\right)\right]_{\times}
+	\end{aligned}
+	\end{equation}
+	
+	\begin{equation}
+	\mathbf{J}_2[2] =
+	\frac{\partial \mathbf{P}_{c_{j}}}
+	{\partial\left[\begin{array}{c}{\delta \mathbf{p}_{bc}} \\ 
+		{\delta \boldsymbol{\theta}_{bc}}\end{array}\right]} =
+	\begin{bmatrix}
+	\frac{\partial \mathbf{P}_{c_{j}}}{\partial \delta \mathbf{p}_{bc}} &
+	\frac{\partial \mathbf{P}_{c_{j}}}{\partial \delta \boldsymbol{\theta}_{bc}} 
+	\end{bmatrix}
+	\in \mathbb{R}^{3 \times 6}
+	\end{equation}
+	
+	\item[(d)] Partial derivatives of {\color{blue}feature point inverse depth $\delta \lambda$}
+	
+	\begin{equation}
+	\begin{aligned} 
+	\frac{\partial \mathbf{P}_{c_{j}}}{\partial \delta \lambda} 
+	&=
+	\frac{\partial \mathbf{P}_{c_{j}}}{\partial \mathbf{P}_{c_{i}}} 
+	\frac{\partial \mathbf{P}_{c_{i}}}{\partial \delta \lambda} \\ 
+	&=
+	\mathbf{R}_{b c}^{\top} \mathbf{R}_{w b_{j}}^{\top} \mathbf{R}_{w b_{i}} \mathbf{R}_{b c}
+	\left(-\frac{1}{\lambda^{2}}
+	\left[\begin{array}{c}{u_{c_{i}}} \\ {v_{c_{i}}} \\ {1}\end{array}\right]\right) \\ 
+	&=
+	-\frac{1}{\lambda} \mathbf{R}_{b c}^{\top} \mathbf{R}_{w b_{j}}^{\top} \mathbf{R}_{w b_{i}} \mathbf{R}_{b c} \mathbf{P}_{c_{i}} 
+	\end{aligned}
+	\end{equation}
+	
+	\begin{equation}
+	\mathbf{J}_2[3] =
+	\frac{\partial \mathbf{P}_{c_{j}}}{\partial \delta \lambda}
+	\in \mathbb{R}^{3 \times 1}
+	\end{equation}
+	
+\end{enumerate}
+
+
+All the above codes can be seen in \verb|factor/projectionXFrameXCamFactor.cpp|.
+
+\section{IMU Factor}
+
+This section is quite complicated. 
+
+\subsection{Residuals}
+
+According to the explanation of IMU pre-integration in section~\ref{sec:preintegration}, we acquire the pre-integration residuals:
+
+\begin{equation}
+\label{equ:residual_imu_origin}
+\mathbf{r}_{\mathcal{B}}\left(\hat{\mathbf{z}}_{b_{k+1}}^{b_{k}}, \mathcal{X}\right) 
+=
+\left[\begin{array}{c}
+{\delta \boldsymbol{\alpha}_{b_{k+1}}^{b_{k}}} \\ 
+{\delta \boldsymbol{\theta}_{b_{k+1}}^{b_{k}}} \\
+{\delta \boldsymbol{\beta}_{b_{k+1}}^{b_{k}}} \\ 
+{\delta \mathbf{b}_{b_{k}}} \\ 
+{\delta \mathbf{b}_{g_{k}}}
+\end{array}\right]_{15 \times 1} 
+= 
+\left[\begin{array}{c}
+{\mathbf{R}_{w}^{b_{k}}
+	\left(\mathbf{p}_{b_{k+1}}^{w}-\mathbf{p}_{b_{k}}^{w}+\frac{1}{2} \mathbf{g}^{w} \Delta t_{k}^{2}-\mathbf{v}_{b_{k}}^{w} \Delta t_{k}\right)-
+	\color{blue}{\boldsymbol{\alpha}_{b_{k+1}}^{b_{k}}}} \\ 
+{2\left[\mathbf{q}_{b_{k}}^{w^{-1}} \otimes \mathbf{q}_{b_{k+1}}^{w} \otimes\left({\color{blue}{{\gamma}_{b_{k+1}}^{b_{k}}}}\right)^{-1}\right]_{x y z}} \\
+{\mathbf{R}_{w}^{b_{k}}\left(\mathbf{v}_{b_{k+1}}^{w}+\mathbf{g}^{w} \Delta t_{k}-\mathbf{v}_{b_{k}}^{w}\right) - \color{blue}{\boldsymbol{\beta}}_{b_{k+1}}^{b_{k}}} \\  
+{\mathbf{b}_{a b_{k+1}}-\mathbf{b}_{a b_{k}}} \\ 
+{\mathbf{b}_{w b_{k+1}}-\mathbf{b}_{w b_{k}}}
+\end{array}\right]
+\end{equation}
+
+where $[\color{blue}{{\alpha}^{b_{k}}_{b_{k+1}},{\gamma}^{b_{k}}_{b_{k+1}},{\beta}^{b_{k}}_{b_{k+1}}}]$ is the bias correction value.
+
+Rewrite the above equation \eqref{equ:residual_imu_origin} into quaternion form:
+
+\begin{equation}
+\label{equ:residual_imu_q}
+\mathbf{r}_{\mathcal{B}}
+=
+\left[\begin{array}{c}
+{\mathbf{r}_{p}} \\ 
+{\mathbf{r}_{q}} \\ 
+{\mathbf{r}_{v}} \\ 
+{\mathbf{r}_{b a}} \\ 
+{\mathbf{r}_{b g}}
+\end{array}\right]
+=
+\left[\begin{array}{c}
+{\mathbf{q}_{b_{i} w}\left(\mathbf{p}_{w b_{j}}-\mathbf{p}_{w b_{i}}-\mathbf{v}_{i}^{w} \Delta t+\frac{1}{2} \mathbf{g}^{w} \Delta t^{2}\right)-{\color{blue}\boldsymbol{\alpha}_{b_{i} b_{j}}}} \\ 
+{2\left[{\color{blue}\mathbf{q}_{b_{j} b_{i}}} \otimes\left(\mathbf{q}_{b_{i} w} \otimes \mathbf{q}_{w b_{j}}\right)\right]_{xyz}} \\ 
+{\mathbf{q}_{b_{i} w}\left(\mathbf{v}_{j}^{w}-\mathbf{v}_{i}^{w}+\mathbf{g}^{w} \Delta t\right)-{\color{blue}\boldsymbol{\beta}_{b_{i} b_{j}}}} \\ 
+{\mathbf{b}_{j}^{a}-\mathbf{b}_{i}^{a}} \\ 
+{\mathbf{b}_{j}^{g}-\mathbf{b}_{i}^{g}}
+\end{array}\right]_{15 \times 1}
+\end{equation}
+
+\begin{cppcode}
+Eigen::Quaterniond dq_rected = delta_q * Utility::deltaQ(dq_dbg * dbg);
+Eigen::Vector3d    dv_rected = delta_v + dv_dba * dba + dv_dbg * dbg;
+Eigen::Vector3d    dp_rected = delta_p + dp_dba * dba + dp_dbg * dbg;
+
+residuals.block<3, 1>(O_P, 0)  = 
+Qi.inverse() * (0.5*G*sum_dt*sum_dt + Pj - Pi - Vi*sum_dt) - dp_rected;
+residuals.block<3, 1>(O_R, 0)  = 
+2 * (dq_rected.inverse() * (Qi.inverse() * Qj)).vec();
+residuals.block<3, 1>(O_V, 0)  = 
+Qi.inverse() * (G * sum_dt + Vj - Vi) - dv_rected;
+residuals.block<3, 1>(O_BA, 0) = Baj - Bai;
+residuals.block<3, 1>(O_BG, 0) = Bgj - Bgi;
+\end{cppcode}
+
+\subsection{Covariance Matrix}
+
+The covariance matrix $\boldsymbol{\Sigma}$ is the $\mathbf{P}$ calculated from the previous IMU pre-integration. 
+
+\begin{cppcode}
+Eigen::Map<Eigen::Matrix<double, 15, 1>> residual(residuals);
+residual=pre_integration->evaluate(Pi, Qi, Vi, Bai, Bgi, Pj, Qj, Vj, Baj, Bgj);
+
+Eigen::Matrix<double, 15, 15> cov_inv = pre_integration->covariance.inverse();
+Eigen::Matrix<double, 15, 15> sqrt_info =
+Eigen::LLT<Eigen::Matrix<double, 15, 15>>(cov_inv).matrixL().transpose();
+
+residual = sqrt_info * residual; 
+\end{cppcode}
+
+Once we get the covariance (\verb|sqrt_info|), we use that to calculate the Mahalanobis distance by multiplying with \verb|residual|
+
+\begin{equation}
+\|\mathbf{r}\|^2_{\boldsymbol{\Sigma}} = \mathbf{r}^T \boldsymbol{\Sigma}^{-1} \mathbf{r}
+\end{equation}
+
+\subsection{Jacobian Matrix}
+
+We still need to calculate the partial derivatives of error state variables according to equation \eqref{equ:residual_imu_q}.
+
+\begin{enumerate}
+	\item Partial derivatives to {\color{blue} $[\delta p^{w}_{b_{i}},\delta \theta ^{w}_{b_{i}}]$} at $ith$ frame.
+	\begin{equation}
+	\mathbf{J}[0]=
+	\begin{bmatrix}
+	-\mathbf{R}_{b_{i} w} & \left[\mathbf{R}_{b_{i} w}\left(\mathbf{p}_{w b_{j}}-\mathbf{p}_{w b_{i}}-\mathbf{v}_{i}^{w} \Delta t+\frac{1}{2} \mathbf{g}^{w} \Delta t^{2}\right)\right]_{\times} \\
+	\mathbf{0} & -2\left[\begin{array}{ll}{\mathbf{0}} & {\mathbf{I}}\end{array}\right]\left[\mathbf{q}_{w b_{j}}^{*} \otimes \mathbf{q}_{w b_{i}}\right]_{L}\left[\mathbf{q}_{b_{i} b_{j}}\right]_{R}\left[\begin{array}{c}{\mathbf{0}} \\ {\frac{1}{2} \mathbf{I}}\end{array}\right] \\
+	\mathbf{0} & \left[\mathbf{R}_{b_{i} w}\left(\mathbf{v}_{j}^{w}-\mathbf{v}_{i}^{w}+\mathbf{g}^{w} \Delta t\right)\right]_{\times} \\
+	\mathbf{0} & \mathbf{0}  \\
+	\mathbf{0} & \mathbf{0} 
+	\end{bmatrix}
+	\in \mathbb{R}^{15 \times 7}
+	\end{equation}
+	
+	\item Partial derivatives to {\color{blue}$[\delta v^{w}_{i},\delta b^a_{i},\delta b^g_{i}]$} at $ith$ frame.
+	
+	\begin{equation}
+	\mathbf{J}[1]=
+	\begin{bmatrix}
+	-\mathbf{R}_{b_{i} w} \Delta t & -\mathbf{J}_{b_{i}^{a}}^{\alpha} & -\mathbf{J}_{b_{i}^{g}}^{\alpha} \\
+	\mathbf{0} & \mathbf{0} & -2\left[\begin{array}{ll}{\mathbf{0}} & {\mathbf{I}}\end{array}\right]\left[\mathbf{q}_{w b_{j}}^{*} \otimes \mathbf{q}_{w b_{i}} \otimes \mathbf{q}_{b_{i} b_{j}}\right]_{L}\left[\begin{array}{c}{\mathbf{0}} \\ {\frac{1}{2} \mathbf{J}_{b_{i}^{g}}^{q}}\end{array}\right] \\
+	-\mathbf{R}_{b_{i} w} & -\mathbf{J}_{b_{i}^{a}}^{\beta} & -\mathbf{J}_{b_{i}^{g}}^{\beta} \\
+	\mathbf{0} & -\mathbf{I}  &  \mathbf{0} \\
+	\mathbf{0} &  \mathbf{0}  & -\mathbf{I}
+	\end{bmatrix}
+	\in \mathbb{R}^{15 \times 9}
+	\end{equation}
+	
+	\item Partial derivatives to {\color{blue}$[\delta p^{w}_{b_{j}},\delta \theta ^{w}_{b_{j}}]$} at $ith$ frame.
+	
+	\begin{equation}
+	\mathbf{J}[2]=
+	\begin{bmatrix}
+	\mathbf{R}_{b_{i} w} & \mathbf{0} \\
+	\mathbf{0} & 2\left[\begin{array}{ll}{\mathbf{0}} & {\mathbf{I}}\end{array}\right]\left[\mathbf{q}_{b_{i} b_{j}}^{*} \otimes \mathbf{q}_{w b_{i}}^{*} \otimes \mathbf{q}_{w b_{j}}\right]_{L}\left[\begin{array}{c}{\mathbf{0}} \\ {\frac{1}{2} \mathbf{I}}\end{array}\right] \\
+	\mathbf{0} & \mathbf{0} \\
+	\mathbf{0} & \mathbf{0}  \\
+	\mathbf{0} & \mathbf{0}   
+	\end{bmatrix}
+	\in \mathbb{R}^{15 \times 7}
+	\end{equation}
+	
+	\item Partial derivatives to {\color{blue}$[\delta v^{w}_{j},\delta b^a_{j},\delta b^g_{j}]$} at $ith$ frame.
+	
+	\begin{equation}
+	\mathbf{J}[3]=
+	\begin{bmatrix}
+	\mathbf{0} & \mathbf{0} & \mathbf{0} \\
+	\mathbf{0} & \mathbf{0} & \mathbf{0} \\
+	\mathbf{R}_{b_{i} w} & \mathbf{0} & \mathbf{0} \\
+	\mathbf{0} & \mathbf{I} & \mathbf{0} \\
+	\mathbf{0} & \mathbf{0} & \mathbf{I}
+	\end{bmatrix}
+	\in \mathbb{R}^{15 \times 9}
+	\end{equation}
+	
+\end{enumerate}
+
+
+
+\section{INS Factor}
+
+
+
+
+\section{GPS Factor}
+
+
+
+
+
+
+\section{Marginalization}
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[scale=0.5]{figures/marginalization.png}
+\end{figure}
+
+Sliding window constraints the number of key-frames to keep a bound of finite complexity by restraining the accumulating of pose and feature numbers with time going on.
+
+\subsection{Marginalization Concept}
+
+When we are using sliding window, we have to abandon old poses, thus culling out some constraints, which is bound to cause the decrease of accuracy. So instead of directly "throwing out" the constraints, it is better converting the related constraints into a prior constraint in the optimization called "marginalization".
+
+The process of marginalization is the process of \textbf{decomposing joint probability distribution into marginal probability distribution and conditional probability distribution}, also can be taken as the reduction of parameters to be optimized using Shur Complement algorithm.
+
+
+It is known that there exists sparsity in the Hessian matrix in the visual SLAM case according to the optimization theory. For example, a residual only describes the error that at camera pose $\mathbf{x}_i$ we observed landmark $\mathbf{p}_j$, so the Jacobian matrix of this residual contains all 0 values except the $\mathbf{x}_i$ and $\mathbf{p}_j$ entries. Hessian matrix is the quadratic form of Jacobian: $\mathbf{H} = \mathbf{J}^T\mathbf{T}$. 
+
+
+
+So for the Hessian matrix we can decompose it into four blocks by converting the equation $\mathbf{p}_j$ into:
+
+\begin{equation}
+\label{eq:linearequations}
+\left[ \begin{matrix}
+\bm{B}   &   \bm{E} \\
+\bm{E^\mathrm{T}} &   \bm{C}
+\end{matrix}\right] 
+\left[ \begin{array}{l}
+\Delta \bm{x}_c \\
+\Delta \bm{x}_p 
+\end{array} \right] = 
+\left[ \begin{array}{l}
+\bm{v} \\
+\bm{w} 
+\end{array} \right].
+\end{equation}
+
+where $\bm{B}$ is a diagonal matrix with dimension of each diagonal block the same as camera parameter and the number of diagonal blocks the same as camera variable numbers. As each landmark we only record the inverse depth value, so the dimension of each block is $1\times1$. 
+
+
+
+
+The use of marginalization is very popular among key-frame based SLAM methods. It is used in \textit{g2o} for calculation speedup by eliminating landmark variables first and then try to solve camera pose first to in turn solve the landmark variables. While in our system, we need to really marginalize out the oldest or last new frames to maintain their relationships with the current sliding window without the need to calculate them.
+
+
+
+
+
+
+
+
+\begin{equation}\label{eq:guasselimination}
+\left[ \begin{matrix}
+\bm{I}   &    -\bm{EC^{-1}} \\
+\bm{0}	 &	  \bm{I}
+\end{matrix}\right]
+\left[ \begin{matrix}
+\bm{B}   &   \bm{E} \\
+\bm{E^\mathrm{T}} &   \bm{C}
+\end{matrix}\right] 
+\left[ \begin{array}{l}
+\Delta \bm{x}_c \\
+\Delta \bm{x}_p 
+\end{array} \right] = 
+\left[ \begin{matrix}
+\bm{I}   &    -\bm{EC^{-1}}  \\
+\bm{0}	 &	  \bm{I}
+\end{matrix}
+\right]
+\left[ \begin{array}{l}
+\bm{v} \\
+\bm{w} 
+\end{array} \right]  .
+\end{equation}
+
+Then we get:
+
+\begin{equation}
+\left[ \begin{matrix}
+\bm{B} - \bm{E}\bm{C}^{-1}\bm{E}^\mathrm{T}	& 	\bm{0} \\
+\bm{E}^\mathrm{T}							& 	\bm{C}
+\end{matrix} \right]
+\left[ \begin{array}{l}
+\Delta \bm{x}_c \\
+\Delta \bm{x}_p 
+\end{array} \right] = 
+\left[\begin{array}{l}
+\bm{v} - \bm{E}\bm{C}^{-1}\bm{w}  \\
+\bm{w}
+\end{array}\right].
+\label{mid_schur}
+\end{equation}
+
+where $\bm{E}\bm{C}^{-1}\bm{E}^\mathrm{T}$ is called the \textbf{Schur factor} of $\bm{C}$ in $\bm{E}$. After elimination, the first line becomes irrelevant with $\Delta \bm{x}_p$. So we extract it and get the incremental equation of the "pose" part.
+
+\begin{equation}
+\left[ 
+\bm{B} - \bm{E}\bm{C}^{-1}\bm{E}^\mathrm{T}
+\right]
+\Delta \bm{x}_c  = 
+\bm{v} - \bm{E}\bm{C}^{-1}\bm{w}.
+\label{eq:marginalization}
+\end{equation}
+
+The dimension of this linear equation is the same as $\bm{B}$ matrix. So we first solve the equation and replace the solved $\Delta \bm{x}_c$ into the original equation and get $\Delta \bm{x}_p$. This process is called \textcolor{blue}{Schur Elimination}. 
+
+
+\subsection{Toy Example of Marginalization}
+
+The process of marginalization and the follow-up phenomenon called "fill-in" (the Hessian matrix becomes dense) can be illustrated in this section. 
+
+Suppose we have 4 camera poses $\bm{x}_{pi}$ and 6 landmarks $\bm{x}_{mk}$, the links between camera and landmarks represent a visual observation and the links between camera poses are INS/IMU constraints. Then we can get:
+
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=.6\linewidth]{figures/before_marg.png}
+	\caption{Graph relationships of 4 camera poses observing 6 landmarks.}
+	\label{fig:before_marg}
+\end{figure}
+
+Then if we try to marginalize out $\bm{x}_{p1}$, and then marginalize out $\bm{x}_{m1}$, the change of Hessian matrix $\bm{H}$ is illustrated as:
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=1.0\linewidth]{figures/marg_process_fillin.png}
+	\caption{The change of $\bm{H}$ matrix when marginalizing out pose and landmark.}
+	\label{fig:marg_process_fillin}
+\end{figure}
+
+To explain this in details, let \ref{fig:marg_process_fillin}-(a) represent the original $\bm{H}$ matrix with the top-left part landmark related information and bottom-right part pose information. \ref{fig:marg_process_fillin}-(b) moves the part related to $\bm{x}_{p1}$ to the top left corner of the $\bm{H}$ matrix.
+
+\ref{fig:marg_process_fillin}-(c) is the matrix after marginalizing out the $\bm{x}_{p1}$ values, which represents the $\left( \bm{B} - \bm{E}\bm{C}^{-1}\bm{E}^\mathrm{T} \right)$ in equation \eqref{eq:marginalization}. As you can see, compared to (b), \ref{fig:marg_process_fillin}-(c) becomes denser (the color becomes darker) by filling-in three places.
+
+\begin{figure}[H]
+	\centering
+	\begin{subfigure}[t]{.4\linewidth}
+	\centering\includegraphics[width=.8\linewidth]{figures/marg_01.png}
+	\caption{Representation of \ref{fig:marg_process_fillin}-a.}
+	\end{subfigure}
+	\begin{subfigure}[t]{.4\linewidth}
+		\centering\includegraphics[width=.8\linewidth]{figures/marg_02.png}
+		\caption{Representation of \ref{fig:marg_process_fillin}-b.}
+	\end{subfigure}
+	\begin{subfigure}[t]{.4\linewidth}
+	\centering\includegraphics[width=.8\linewidth]{figures/marg_03.png}
+	\caption{Representation of \ref{fig:marg_process_fillin}-a.}
+\end{subfigure}
+\begin{subfigure}[t]{.4\linewidth}
+	\centering\includegraphics[width=.8\linewidth]{figures/marg_04.png}
+	\caption{Representation of \ref{fig:marg_process_fillin}-b.}
+\end{subfigure}
+\caption{Detailed illustration of Hessian matrix during marginalization.}
+\end{figure}
+
+At this time, the new graph becomes:
+
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=.6\linewidth]{figures/after_marg.png}
+	\caption{Graph relationships after marginalizing out $\bm{x}_{p1}$.}
+	\label{fig:after_marg}
+\end{figure}
+
+As you can see there exist new constraints between $\bm{x}_{m1}$, $\bm{x}_{m2}$ and $\bm{x}_{m3}$, and also between $\bm{x}_{p2}$ and $\bm{x}_{m1}$.
+
+If you further marginalize out $\bm{x}_{m1}$, actually $\bm{H}$ does not become denser as seen in \ref{fig:marg_process_fillin}-(d). That's because $\bm{x}_{m1}$ does not relate to other poses except $\bm{x}_{p1}$. So marginalizing out landmarks not observed by other frames will not make the $\bm{H}$ matrix denser. 
+
+
+
+\subsection{Implementation}
+
+
+We first define the marginalization factor in \textit{Ceres} according to the dimension of different variables to be optimized.
+
+\begin{cppcode}
+struct ResidualBlockInfo{
+ceres::CostFunction *_cost_function, 
+ceres::LossFunction *_loss_function,
+// Variable values to be optimized.
+std::vector<double *> _parameter_blocks, 
+// Variable values to be marginalized out.
+std::vector<int> _drop_set}
+
+\end{cppcode}
+
+
+\begin{cppcode}
+class MarginalizationInfo {
+// (1) All the observable factors (in form of residual block information).
+std::vector<ResidualBlockInfo *> factors;
+// (2) pos: size of all variables (local size).
+// (3) n: number of remaining variables to be optimized (local size).
+// (4) m: number of variables to be marginalized (local size).
+int m, n;
+
+// "parameter\_block\_sizes":
+// parameters in cost\_function is an array of pointers to arrays
+// csame number of elements as parameter\_block\_sizes.  
+// Parameter blocks are in the same order as parameter\_block\_sizes. i.e.,
+//   parameters\_[i] = double[parameter\_block\_sizes\_[i]]
+
+// (5) The memory address of variables to be optimized.
+// <long, int> where first element is address of variable.
+// second element is the number of outputs (residuals)
+std::unordered_map<long, int> parameter_block_size;
+// (6) Corresponding data (double*) of "parameter\_block\_size".
+std::unordered_map<long, double *> parameter_block_data;
+int sum_block_size;
+// Ids in "parameter\_block\_size", the memory address
+// of variables to be marginalized.
+std::unordered_map<long, int> parameter_block_idx; //local size
+
+std::vector<int> keep_block_size; //global size
+std::vector<int> keep_block_idx;  //local size
+std::vector<double *> keep_block_data;
+Eigen::MatrixXd linearized_jacobians;
+Eigen::VectorXd linearized_residuals;
+// Add residual block information (all variables to be optimized).
+void addResidualBlockInfo(ResidualBlockInfo *residual_block_info);
+
+// Calculate Jacobian of each residual, and update "parameter\_block\_data"
+void preMarginalize();
+
+// pos: dimension of all variables.
+void marginalize();
+}
+\end{cppcode}
+
+\begin{itemize}
+	\item \verb|parmaeter_block_data|	\\
+	 When the oldest keyframe is to be marginalized, the term \verb|parameter_block_size| is the local size of all variables and  \verb|parameter_block_data| is the corresponding stored data (double* type). 
+	Set the oldest frame (namely $0th$ frame) the camera observed $k=68$ landmarks, then the size of both \verb|parameter_block_size| and \verb|parameter_block_data| vector is:
+	
+	\begin{equation*}
+	2(V_0, V_1) + 11(P_{0:10}) + 68(\lambda_{1:k}) = 81
+	\end{equation*}
+	
+	Considering the variable dimension, the total local size of all variables is:
+	
+	\begin{equation*}
+	pos = 2\times 9 + 11\times 6 + 68 = 152
+	\end{equation*}
+	
+	\item \verb|parameter_block_idx| \\
+	
+	\verb|parameter_block_idx| is the variables that need to be marginalized. So the size of the array of \verb|parameter_block_idx| is:
+	
+	\begin{equation*}
+	1(P_0) + 1(V_0) + 68(\lambda_{1:k}) = 70
+	\end{equation*}
+	
+	If we use $m$ to represent the total local size of the variables to be marginalized, (namely $m=6+9+68=83$), then we use $n$ to indicate the total local size of the variable to be kept: $n=pos-m = 152-83=69$.
+	
+\end{itemize}
+
+
+Inspired by VINS~\cite{qin2017vins}, we introduce a two-way marginalization method to handle the static motion case. 
+
+\begin{enumerate}
+	\item \verb|MARGIN_OLD|: If the last new frame is a keyframe, we abandon the oldest frame in the sliding window and implement marginalization to tackle the related constraints of this old frame. It is worth noting that, if this keyframe is the first frame to observe some 3D map point, we need to convert the depth of this map point to the next keyframe.
+	
+	\begin{enumerate}
+		\item Transmit the residual item (size is $n$) of last prior factor to the current prior facotr and remove the states to be abandoned.
+		\item If there is IMU pre-integration items (when there is IMU sensor input), we put the IMU constraint between the $0th$ and $1th$ frame into the \verb|marginalization_info| class.
+		\item For the landmark points that were observed for the first time at the $0th$ frame, we put them into the \verb|marginalization_info| class.
+		\item \verb|marginalization_info->preMarginalize()|: Calculate the \verb|parameter_blocks| and the corresponding jacobians and residuals before formulating the optimization problem.
+		\item \verb|marginalization_info->marginalize()|: Calculate the equation \eqref{eq:marginalization}.
+		
+\begin{cppcode}
+// Line 301 in sslam\_estimator/src/factor/
+// marginalization\_factor.cpp. 
+Eigen::VectorXd bmm = b.segment(0, m);
+Eigen::MatrixXd Amr = A.block(0, m, m, n);
+Eigen::MatrixXd Arm = A.block(m, 0, n, m);
+Eigen::MatrixXd Arr = A.block(m, m, n, n);
+Eigen::VectorXd brr = b.segment(m, n);
+A = Arr - Arm * Amm_inv * Amr;
+b = brr - Arm * Amm_inv * bmm;
+\end{cppcode}
+		
+	\end{enumerate}
+	
+	
+	\item \verb|MARGIN_NEW|: If the last new frame is not a keyframe, then abandon it without the need of marginalization. Since our strategy of judging whether a frame is a keyframe is that it has low parallax with the previous frame, we can directly replace the current frame with the last new frame. The similar constraints will not bring additional effective information so we can directly delete that frame without losing accuracy. 
+	
+\end{enumerate}
+
+So if the UGV stays in the same location for a long time, the VO system will always implement \verb|MARGIN_NEW| and the sliding window will only keep the poses that are relative "old" but with a big parallax. In this way we can reduce the accumulating drift cost by camera and INS/IMU small errors.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 \newpage 
 %-----------------------------------------------------------------------------------------
 %----------------------------------------------------------------------------------------
 %	BIBLIOGRAPHY
 %----------------------------------------------------------------------------------------
-\section{Bibliography}
-\label{Bibliography}
+%\chapter{Bibliography}
+%\label{Bibliography}
 
-\lhead{\emph{PreIntegration}} % Change the page header to say "Bibliography"
-
-\bibliographystyle{apalike} % Use the "unsrtnat" BibTeX style for formatting the
-Bibliography
-
+\bibliographystyle{plainnat}
 \bibliography{vins} % The references (bibliography) information are stored in
-the file named "Bibliography.bib" Bibliography
+
 
 \end{document}
 
